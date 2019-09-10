@@ -7,6 +7,7 @@ import numpy as np
 import plotly.graph_objs as go
 from datetime import datetime as dt
 import dash_table
+from textwrap import dedent as d
 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -59,6 +60,48 @@ for p in trade_table.Portfolio.unique():
 groupby_product = groupby_product.reset_index(level=['Product'])
 groupby_product = groupby_product[['Portfolio','Product','Size/Notional']]
 
+# data for Tab 4
+df = pd.read_excel('C:/Users/Bixuan/Desktop/NUS/BT3101/Code/trader_pnl.xlsx',encoding = "ISO-8859-1")
+# figure for Tab 4
+fig4 = go.Figure()
+fig4.add_trace(go.Scatter(
+                x=df.Date,
+                y=df['A_PNL'],
+                name="Trader A",
+                line_color='blue',
+                opacity=0.8))
+
+fig4.add_trace(go.Scatter(
+                x=df.Date,
+                y=df['B_PNL'],
+                name="Trader B",
+                line_color='red',
+                opacity=0.8))
+
+fig4.add_trace(go.Scatter(
+                x=df.Date,
+                y=df['C_PNL'],
+                name="Trader C",
+                line_color='green',
+                opacity=0.8))
+
+fig4.add_trace(go.Scatter(
+                x=df.Date,
+                y=df['D_PNL'],
+                name="Trader D",
+                line_color='purple',
+                opacity=0.8))
+
+fig4.add_trace(go.Scatter(
+                x=df.Date,
+                y=df['E_PNL'],
+                name="Trader E",
+                line_color='orange',
+                opacity=0.8))
+
+# Use date string to set xaxis range
+fig4.update_layout(xaxis_range=['2018-01-01','2018-01-31'],
+                  title_text="Team Performance")
 
 # Dashboard layout
 app.layout = html.Div([
@@ -163,9 +206,96 @@ app.layout = html.Div([
         
         dcc.Tab(label='Team Summary', children = [
                 html.Div([
-                    html.H3('Individual Summary')
+                    html.H3('Individual Summary'),
+                    # Textbox Row 1
+                    html.Div(className='row', children=[
+                        html.Div([
+                            dcc.Markdown(d("""
+                                **TOTAL PNL**
+
+                                100
+                            """)),
+                            html.Pre(id='total-pnl')
+                        ], className='three columns'),
+
+                        html.Div([
+                            dcc.Markdown(d("""
+                                **NO. OF PORTFOLIOS**
+
+                                12
+                            """)),
+                            html.Pre(id='no-of-portfolios'),
+                        ], className='three columns'),
+
+                        html.Div([
+                            dcc.Markdown(d("""
+                                **LAST WEEK TRADES**
+
+                                20
+                            """)),
+                            html.Pre(id='last-week-trades'),
+                        ], className='three columns'),
+
+
+                    ]),
+                    #Textbox Row 2
+                    html.Div(className='row', children=[
+                        html.Div([
+                            dcc.Markdown(d("""
+                                **SHARPE RATIO**
+
+                                1.2
+                            """)),
+                            html.Pre(id='sharpe-ratio')
+                        ], className='three columns'),
+
+                        html.Div([
+                            dcc.Markdown(d("""
+                                **SORTING RATIO**
+
+                                1.2
+                            """)),
+                            html.Pre(id='sorting-ratio'),
+                        ], className='three columns'),
+
+                        html.Div([
+                            dcc.Markdown(d("""
+                                **HIT RATIO**
+
+                                1.2
+                            """)),
+                            html.Pre(id='hit-ratio'),
+                        ], className='three columns'),
+
+
+                    ]),  
+                    # Dropdown
+                    html.Div([
+                            # Select Timeframe
+                            html.P([
+                                html.Label('Select Timeframe'),
+                                dcc.Dropdown(id='Timeframe-selector',
+                                            options=[
+                                                {'label': 'Daily', 'value': 'Daily'},
+                                                {'label': 'Weekly', 'value': 'Weekly'},
+                                                {'label': 'Monthly', 'value': 'Monthly'}
+                                            ],
+                                            value='Weekly')
+                            ], style = {'width': '400px',
+                                        'fontSize' : '20px',
+                                        'padding-left' : '100px',
+                                        'display': 'inline-block'}),           
+                    ]),                    
+                    # Graph
+                    html.Div([
+                            
+                        html.Div([
+                            dcc.Graph(id='team-view', figure = fig4)
+                        ]),
+                    ]),
+
                 ])        
-        ]),        
+        ]),       
     ])
 ])
 
@@ -206,6 +336,15 @@ def update_table(n_clicks, portfolio, type, product, direction, price, size, ten
               [Input('tab3 time unit', 'value'),
                Input('tab3 portfolio', 'value')]
              )
+
+@app.callback(
+    Output(component_id='team-view', component_property='figure'),
+    [
+        Input(component_id='Timeframe-selector', component_property='value')
+    ]
+)
+
+
 def update_tab3_daily(time,portfolio):
     temp_df = trade_table[trade_table['Portfolio']==portfolio]
     temp_df = temp_df[temp_df['Time Frame']==time].sort_values('Timestamp')
@@ -218,6 +357,12 @@ def update_tab3_daily(time,portfolio):
             'layout': go.Layout(xaxis={'title': 'time'},
                                 yaxis={'title': 'price'})}
     
+def load_timeframe_options():
+    options = (
+        [{'label': timeframe, 'value': timeframe}
+         for timeframe in ['Daily','Weekly','Monthly']]
+    )
+    return options
     
               
 
