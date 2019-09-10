@@ -14,37 +14,37 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 # Initialise trade table
-data = [('A', 'type','dir','SGD','1','10','tenor','risk','week','strategy','1'),
-        ('A', 'type','dir','CNY','1.5','20','tenor','risk','week','strategy','2'),
-        ('A', 'type','dir','GBP','0.5','30','tenor','risk','week','strategy','3'),
-        ('B', 'type','dir','JPY','3','20','tenor','risk','week','strategy','1'),
-        ('B', 'type','dir','CHF','2','10','tenor','risk','week','strategy','2'),
-        ('B', 'type','dir','USD','2.5','30','tenor','risk','week','strategy','3'),
-        ('C', 'type','dir','EUR','3.5','10','tenor','risk','week','strategy','1'),
-        ('C', 'type','dir','SGD','2','10','tenor','risk','week','strategy','2'),
-        ('C', 'type','dir','CNY','1.5','40','tenor','risk','week','strategy','3'),
-       ('A', 'type','dir','SGD','1','10','tenor','risk','day','strategy','3'),
-        ('A', 'type','dir','CNY','1.5','20','tenor','risk','day','strategy','2'),
-        ('A', 'type','dir','GBP','0.5','30','tenor','risk','day','strategy','1'),
-        ('B', 'type','dir','JPY','3','20','tenor','risk','day','strategy','3'),
-        ('B', 'type','dir','CHF','2','10','tenor','risk','day','strategy','2'),
-        ('B', 'type','dir','USD','2.5','30','tenor','risk','day','strategy','1'),
-        ('C', 'type','dir','EUR','3.5','10','tenor','risk','day','strategy','3'),
-        ('C', 'type','dir','SGD','2','10','tenor','risk','day','strategy','2'),
-        ('C', 'type','dir','CNY','1.5','40','tenor','risk','day','strategy','1'),
-       ('A', 'type','dir','SGD','1','10','tenor','risk','month','strategy','2'),
-        ('A', 'type','dir','CNY','1.5','20','tenor','risk','month','strategy','3'),
-        ('A', 'type','dir','GBP','0.5','30','tenor','risk','month','strategy','1'),
-        ('B', 'type','dir','JPY','3','20','tenor','risk','month','strategy','2'),
-        ('B', 'type','dir','CHF','2','10','tenor','risk','month','strategy','3'),
-        ('B', 'type','dir','USD','2.5','30','tenor','risk','month','strategy','1'),
-        ('C', 'type','dir','EUR','3.5','10','tenor','risk','month','strategy','2'),
-        ('C', 'type','dir','SGD','2','10','tenor','risk','month','strategy','3'),
-        ('C', 'type','dir','CNY','1.5','40','tenor','risk','month','strategy','1'),]
+data = [('A', 'type','dir','SGD','1','10','tenor','risk','week','strategy','1','A01'),
+        ('A', 'type','dir','CNY','1.5','20','tenor','risk','week','strategy','2','A01'),
+        ('A', 'type','dir','GBP','0.5','30','tenor','risk','week','strategy','3','A01'),
+        ('B', 'type','dir','JPY','3','20','tenor','risk','week','strategy','1','B01'),
+        ('B', 'type','dir','CHF','2','10','tenor','risk','week','strategy','2','B01'),
+        ('B', 'type','dir','USD','2.5','30','tenor','risk','week','strategy','3','B01'),
+        ('C', 'type','dir','EUR','3.5','10','tenor','risk','week','strategy','1','C01'),
+        ('C', 'type','dir','SGD','2','10','tenor','risk','week','strategy','2','C01'),
+        ('C', 'type','dir','CNY','1.5','40','tenor','risk','week','strategy','3','C01'),
+       ('A', 'type','dir','SGD','1','10','tenor','risk','day','strategy','3','A01'),
+        ('A', 'type','dir','CNY','1.5','20','tenor','risk','day','strategy','2','A01'),
+        ('A', 'type','dir','GBP','0.5','30','tenor','risk','day','strategy','1','A01'),
+        ('B', 'type','dir','JPY','3','20','tenor','risk','day','strategy','3','B01'),
+        ('B', 'type','dir','CHF','2','10','tenor','risk','day','strategy','2','B01'),
+        ('B', 'type','dir','USD','2.5','30','tenor','risk','day','strategy','1','B01'),
+        ('C', 'type','dir','EUR','3.5','10','tenor','risk','day','strategy','3','C01'),
+        ('C', 'type','dir','SGD','2','10','tenor','risk','day','strategy','2','C01'),
+        ('C', 'type','dir','CNY','1.5','40','tenor','risk','day','strategy','1','C01'),
+       ('A', 'type','dir','SGD','1','10','tenor','risk','month','strategy','2','A01'),
+        ('A', 'type','dir','CNY','1.5','20','tenor','risk','month','strategy','3','A01'),
+        ('A', 'type','dir','GBP','0.5','30','tenor','risk','month','strategy','1','A01'),
+        ('B', 'type','dir','JPY','3','20','tenor','risk','month','strategy','2','B01'),
+        ('B', 'type','dir','CHF','2','10','tenor','risk','month','strategy','3','B01'),
+        ('B', 'type','dir','USD','2.5','30','tenor','risk','month','strategy','1','B01'),
+        ('C', 'type','dir','EUR','3.5','10','tenor','risk','month','strategy','2','C01'),
+        ('C', 'type','dir','SGD','2','10','tenor','risk','month','strategy','3','C01'),
+        ('C', 'type','dir','CNY','1.5','40','tenor','risk','month','strategy','1','C01'),]
 
 columns = ['Portfolio','Type of Trade','Direction','Product', 
            'Price', 'Size/Notional', 'Tenor', 'Amount to Risk',
-           'Time Frame', 'Strategy Type','time stamp']
+           'Time Frame', 'Strategy Type','Timestamp','User']
 
 trade_table = pd.DataFrame(data, columns = columns)
 trade_table['Size/Notional'] = trade_table['Size/Notional'].astype('int')
@@ -74,6 +74,8 @@ app.layout = html.Div([
         dcc.Tab(label='Input Trade', children = [
                 html.H3('Input Trade'),
                 html.Div([
+                    dcc.Input(id = 'user', type = 'text', placeholder = 'User'),
+                    html.Br(),
                     dcc.Input(id = 'portfolio', type = 'text', placeholder = 'Portfolio'),
                     dcc.Input(id = 'type', type = 'text', placeholder = 'Type of Trade'),
                     dcc.Input(id = 'product', type = 'text', placeholder = 'Product'),
@@ -83,7 +85,8 @@ app.layout = html.Div([
                     dcc.Input(id = 'tenor', type = 'text', placeholder = 'Tenor'),
                     dcc.Input(id = 'risk', type = 'number', placeholder = 'Amount to Risk'),
                     dcc.Input(id = 'timeframe', type = 'text', placeholder = 'Timeframe'),
-                    dcc.Input(id = 'strategy', type = 'text', placeholder = 'Strategy Type')
+                    dcc.Input(id = 'strategy', type = 'text', placeholder = 'Strategy Type'),
+                    dcc.Input(id = 'timestamp', type = 'text', placeholder = 'Timestamp')
                 ], style = {'padding': 20}),
                 html.Div([
                     html.Button('Submit', id = 'button')
@@ -178,8 +181,10 @@ app.layout = html.Div([
     State('tenor', 'value'),
     State('risk', 'value'),
     State('timeframe', 'value'),
-    State('strategy', 'value')])
-def update_table(n_clicks, portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy):
+    State('strategy', 'value'),
+    State('timeframe', 'value'),
+    State('user', 'value')])
+def update_table(n_clicks, portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user):
     index = len(trade_table)
     trade_table.loc[index, 'Portfolio'] = portfolio
     trade_table.loc[index, 'Type of Trade'] = type
@@ -191,6 +196,8 @@ def update_table(n_clicks, portfolio, type, product, direction, price, size, ten
     trade_table.loc[index, 'Amount to Risk'] = risk
     trade_table.loc[index, 'Timeframe'] = timeframe
     trade_table.loc[index, 'Strategy Type'] = strategy
+    trade_table.loc[index, 'Timestamp'] = timestamp
+    trade_table.loc[index, 'User'] = user
     return trade_table.head().to_dict('records')
 
 
@@ -201,10 +208,10 @@ def update_table(n_clicks, portfolio, type, product, direction, price, size, ten
              )
 def update_tab3_daily(time,portfolio):
     temp_df = trade_table[trade_table['Portfolio']==portfolio]
-    temp_df = temp_df[temp_df['Time Frame']==time].sort_values('time stamp')
+    temp_df = temp_df[temp_df['Time Frame']==time].sort_values('Timestamp')
 #    temp = trade_table[trade_table['Time Frame']==time]
     
-    return {'data': [go.Scatter(x=temp_df['time stamp'], 
+    return {'data': [go.Scatter(x=temp_df['Timestamp'], 
                                 y=temp_df['Price'],
                                 mode='lines+markers',
                                 name='lines+markers')],
