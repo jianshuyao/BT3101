@@ -489,8 +489,6 @@ def load_timeframe_options():
          for timeframe in ['Daily','Weekly','Monthly']]
     )
     return options
-    
-              
 
 
 if __name__ == '__main__':
