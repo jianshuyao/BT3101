@@ -49,6 +49,7 @@ columns = ['Portfolio','Type of Trade','Direction','Product',
 
 trade_table = pd.DataFrame(data, columns = columns)
 portfolio_list = sorted(trade_table.Portfolio.unique())
+user_list = sorted(trade_table.User.unique())
 
 # data processing
 # function for tab 1
@@ -253,7 +254,7 @@ app.layout = html.Div([
                                                   {'label': 'Weekly', 'value': 'week'},
                                                   {'label': 'Monthly', 'value': 'month'}],
                                          value='day')],
-                            style={'width': '48%', 'display': 'inline-block'}
+                            style={'width': '33%', 'display': 'inline-block'}
                         ),
                     
                         ###Dropdown to select portfolio
@@ -261,7 +262,15 @@ app.layout = html.Div([
                             dcc.Dropdown(id='tab3 portfolio',
                                          options= [{'label': 'Portfolio '+i, 'value': i} for i in portfolio_list],
                                          value=portfolio_list[0])],
-                            style={'width': '48%', 'display': 'inline-block'}
+                            style={'width': '33%', 'display': 'inline-block'}
+                        ),
+                    
+                        ###Dropdown to select portfolio
+                        html.Div([
+                            dcc.Dropdown(id='tab3 user',
+                                         options= [{'label': 'Trader '+i, 'value': i} for i in user_list],
+                                         value=user_list[0])],
+                            style={'width': '33%', 'display': 'inline-block'}
                         )
                     ]),                          
                                         
@@ -466,9 +475,11 @@ def update_table(n_clicks, portfolio, type, product, direction, price, size, ten
 ###tab3 daily pnl
 @app.callback(Output('tab3 daily pnl', 'figure'),
               [Input('tab3 time unit', 'value'),
-               Input('tab3 portfolio', 'value')])
-def update_tab3_daily(time,portfolio):
+               Input('tab3 portfolio', 'value'),
+               Input('tab3 user', 'value')])
+def update_tab3_daily(time,portfolio,user):
     temp_df = trade_table[trade_table['Portfolio']==portfolio]
+    temp_df = temp_df[trade_table['User']==user]
     temp_df = temp_df[temp_df['Time Frame']==time].sort_values('Timestamp')
 #    temp = trade_table[trade_table['Time Frame']==time]
     
@@ -478,6 +489,7 @@ def update_tab3_daily(time,portfolio):
                                 name='lines+markers')],
             'layout': go.Layout(xaxis={'title': 'time'},
                                 yaxis={'title': 'price'})}
+
 
 # tab 4 load timeframe
 @app.callback(
