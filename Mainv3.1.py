@@ -24,7 +24,7 @@ data = [('A1', 'type','dir','SGD', 1, 10,'tenor', 0.8,'week','strategy','1','A01
         ('C1', 'type','dir','EUR', 3.5, 10,'tenor', 3.4,'week','strategy','1','C01'),
         ('C1', 'type','dir','SGD', 2, 10,'tenor', 1.7,'week','strategy','2','C01'),
         ('C1', 'type','dir','CNY', 1.5, 40,'tenor', 1.3,'week','strategy','3','C01'),
-       ('A2', 'type','dir','SGD', 1, 10,'tenor',0.8,'day','strategy','3','A01'),
+        ('A2', 'type','dir','SGD', 1, 10,'tenor',0.8,'day','strategy','3','A01'),
         ('A1', 'type','dir','CNY', 1.5, 20,'tenor', 1.3, 'day','strategy','2','A01'),
         ('A2', 'type','dir','GBP', 0.5, 30,'tenor',0.3,'day','strategy','1','A01'),
         ('B2', 'type','dir','JPY', 3, 20,'tenor', 2.7,'day','strategy','3','B01'),
@@ -33,7 +33,7 @@ data = [('A1', 'type','dir','SGD', 1, 10,'tenor', 0.8,'week','strategy','1','A01
         ('C1', 'type','dir','EUR', 3.5, 10,'tenor', 3.4,'day','strategy','3','C01'),
         ('C2', 'type','dir','SGD', 2, 10,'tenor', 1.7,'day','strategy','2','C01'),
         ('C3', 'type','dir','CNY', 1.5, 40,'tenor', 1.3,'day','strategy','1','C01'),
-       ('A1', 'type','dir','SGD', 1, 10,'tenor',0.8,'month','strategy','2','A01'),
+        ('A1', 'type','dir','SGD', 1, 10,'tenor',0.8,'month','strategy','2','A01'),
         ('A1', 'type','dir','CNY', 1.5, 20,'tenor', 1.3,'month','strategy','3','A01'),
         ('A1', 'type','dir','GBP', 0.5, 30,'tenor', 0.3,'month','strategy','1','A01'),
         ('B2', 'type','dir','JPY', 3, 20,'tenor', 2.7,'month','strategy','2','B01'),
@@ -48,6 +48,7 @@ columns = ['Portfolio','Type of Trade','Direction','Product',
            'Time Frame', 'Strategy Type','Timestamp','User']
 
 trade_table = pd.DataFrame(data, columns = columns)
+portfolio_list = sorted(trade_table.Portfolio.unique())
 
 # data processing
 # function for tab 1
@@ -58,19 +59,23 @@ def get_user():
 
 # table for tab 3
 trade_table['Size/Notional'] = trade_table['Size/Notional'].astype('int')
+#create an empty df to hold data
 groupby_product = pd.DataFrame(columns=['Portfolio','Size/Notional'])
 groupby_product.index.name = 'Product'
 
 for p in trade_table.Portfolio.unique():
+    #first filter out transactions related to one portfolio and get only the product and sum up the size for each product
     temp = trade_table[trade_table['Portfolio']==p][['Product','Size/Notional']].groupby('Product').sum()
+    #insert the column to indicate the portfolio
     temp.insert(0,'Portfolio',temp.size*[p])
     groupby_product = groupby_product.append(temp)
     
 groupby_product = groupby_product.reset_index(level=['Product'])
 groupby_product = groupby_product[['Portfolio','Product','Size/Notional']]
+groupby_product = groupby_product.sort_values(by=['Portfolio', 'Product'])
 
 # data for Tab 4
-df = pd.read_excel('C:/Users/dell/BT3101/trader_pnl.xlsx',encoding = "ISO-8859-1")
+df = pd.read_excel('trader_pnl.xlsx',encoding = "ISO-8859-1")
 
 # figure for Tab 4
 fig4 = go.Figure()
@@ -254,10 +259,8 @@ app.layout = html.Div([
                         ###Dropdown to select portfolio
                         html.Div([
                             dcc.Dropdown(id='tab3 portfolio',
-                                         options=[{'label': 'Portfolio A', 'value': 'A'},
-                                                  {'label': 'Portfolio B', 'value': 'B'},
-                                                  {'label': 'Portfolio C', 'value': 'C'}],
-                                         value='A')],
+                                         options= [{'label': 'Portfolio '+i, 'value': i} for i in portfolio_list],
+                                         value=portfolio_list[0])],
                             style={'width': '48%', 'display': 'inline-block'}
                         )
                     ]),                          
@@ -426,6 +429,7 @@ def update_tab1_pnl(user):
                         name = i) for i in portfolios                    
                     ]}    
 
+
 # tab 2 update table
 @app.callback(
     Output('trade-table', 'data'),
@@ -462,8 +466,7 @@ def update_table(n_clicks, portfolio, type, product, direction, price, size, ten
 ###tab3 daily pnl
 @app.callback(Output('tab3 daily pnl', 'figure'),
               [Input('tab3 time unit', 'value'),
-               Input('tab3 portfolio', 'value')]
-             )
+               Input('tab3 portfolio', 'value')])
 def update_tab3_daily(time,portfolio):
     temp_df = trade_table[trade_table['Portfolio']==portfolio]
     temp_df = temp_df[temp_df['Time Frame']==time].sort_values('Timestamp')
