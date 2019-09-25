@@ -1,6 +1,8 @@
 /* Table of contents
 ––––––––––––––––––––––––––––––––––––––––––––––––––
 - Grid
+- Tabs
+- Dropdown
 - Base Styles
 - Typography
 - Links
@@ -61,7 +63,7 @@
     .nine.columns                   { width: 74.0%;          }
     .ten.columns                    { width: 82.6666666667%; }
     .eleven.columns                 { width: 91.5%; }
-    .twelve.columns                 { width: 100%; margin-left: 0; }
+    .twelve.columns                 { width: 100%;}
   
     .one-third.column               { width: 30.6666666667%; }
     .two-thirds.column              { width: 65.3333333333%; }
@@ -102,6 +104,117 @@
   
   }
   
+  /* Tabs
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.tabs {
+    width: 90%;
+}
+
+.custom-tabs {
+  background-color: #1E2130;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  margin-right: 50px;
+  margin-left: 50px;
+}
+
+.custom-tab {
+  background-color: #161a28 !important;
+  color: white !important ;
+  border: 0;
+  border-bottom: #1E2130 solid 4px !important;
+  border-top: 0px !important;
+  border-left: 0px !important;
+  border-right: 0px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  height: 60px;
+}
+
+.custom-tab--selected {
+   border-bottom: #91dfd2 solid 4px !important;
+}
+  
+
+/*Dropdown*/
+.setting-input {
+  width: 100% !important;
+  height: 100%;
+}
+
+.react-numeric-input, .react-numeric-input input {
+  width: 100% !important;
+}
+
+.react-numeric-input input {
+  background-color: #242633 !important;
+  border-color: darkgray !important;
+  color: white !important;
+}
+
+.react-numeric-input b:nth-child(2) i {
+  border-color: transparent transparent white !important;
+}
+
+.react-numeric-input b:nth-child(3) i {
+  border-color: white transparent transparent !important;
+}
+
+
+/* Dropdown
+----------------------------------------------*/
+
+/*Dropdown items*/
+.Select-control, .Select-multi-value-wrapper, .Select-menu-outer div {
+  background-color: #242633;
+}
+
+/*Dropdown items*/
+.Select-control, .Select, .Select-value-label, .Select-clear-zone {
+  color: white;
+}
+
+
+/*Dropdown items*/
+.Select-menu-outer {
+  background-color: #242633;
+  border: 2px solid darkgray !important;
+}
+
+/*Dropdown items*/
+.Select-menu-outer div:hover {
+  background-color: rgba(36, 38, 51, 0.5) !important;
+  cursor: pointer;
+}
+
+/*Dropdown arrow + delete button*/
+.Select-control, .Select-control > span {
+  color: white;
+  background: #242633 !important;
+}
+
+/*Placeholder*/
+.Select.has-value.Select--single > .Select-control .Select-value .Select-value-label, .Select.has-value.is-pseudo-focused.Select--single > .Select-control .Select-value .Select-value-label {
+  color: white !important;
+}
+
+/*Placeholder*/
+.Select--single > .Select-control .Select-value, .Select-placeholder {
+  /*border: 1px solid darkgray;*/
+  border-radius: 4px;
+  background-color: #242633;
+  cursor: pointer;
+}
+
+.Select.is-focused:not(.is-open) > .Select-control {
+  border-color: #91dfd2 !important;
+}
+
   
   /* Base Styles
   –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -156,63 +269,69 @@
   
   /* Buttons
   –––––––––––––––––––––––––––––––––––––––––––––––––– */
-  .button,
-  button,
-  input[type="submit"],
-  input[type="reset"],
-  input[type="button"] {
-    display: inline-block;
-    height: 38px;
-    padding: 0 30px;
-    color: #555;
-    text-align: center;
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 38px;
-    letter-spacing: .1rem;
-    text-transform: uppercase;
-    text-decoration: none;
-    white-space: nowrap;
-    background-color: transparent;
-    border-radius: 4px;
-    border: 1px solid #bbb;
-    cursor: pointer;
-    box-sizing: border-box; }
-  .button:hover,
-  button:hover,
-  input[type="submit"]:hover,
-  input[type="reset"]:hover,
-  input[type="button"]:hover,
-  .button:focus,
-  button:focus,
-  input[type="submit"]:focus,
-  input[type="reset"]:focus,
-  input[type="button"]:focus {
-    color: #333;
-    border-color: #888;
-    outline: 0; }
-  .button.button-primary,
-  button.button-primary,
-  input[type="submit"].button-primary,
-  input[type="reset"].button-primary,
-  input[type="button"].button-primary {
-    color: #FFF;
-    background-color: #33C3F0;
-    border-color: #33C3F0; }
-  .button.button-primary:hover,
-  button.button-primary:hover,
-  input[type="submit"].button-primary:hover,
-  input[type="reset"].button-primary:hover,
-  input[type="button"].button-primary:hover,
-  .button.button-primary:focus,
-  button.button-primary:focus,
-  input[type="submit"].button-primary:focus,
-  input[type="reset"].button-primary:focus,
-  input[type="button"].button-primary:focus {
-    color: #FFF;
-    background-color: #1EAEDB;
-    border-color: #1EAEDB; }
-  
+.button,
+button,
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+  display: inline-block;
+  height: 38px;
+  padding: 0 30px;
+  color: #555;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 38px;
+  letter-spacing: .1rem;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border-radius: 4px;
+  border: 1px solid #bbb;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.button:hover,
+button:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover,
+input[type="button"]:hover,
+.button:focus,
+button:focus,
+input[type="submit"]:focus,
+input[type="reset"]:focus,
+input[type="button"]:focus {
+  color: #92e0d3;
+  border-color: whitesmoke;
+  outline: 0;
+}
+
+.button.button-primary,
+button.button-primary,
+input[type="submit"].button-primary,
+input[type="reset"].button-primary,
+input[type="button"].button-primary {
+  color: #FFF;
+  background-color: #33C3F0;
+  border-color: #33C3F0;
+}
+
+.button.button-primary:hover,
+button.button-primary:hover,
+input[type="submit"].button-primary:hover,
+input[type="reset"].button-primary:hover,
+input[type="button"].button-primary:hover,
+.button.button-primary:focus,
+button.button-primary:focus,
+input[type="submit"].button-primary:focus,
+input[type="reset"].button-primary:focus,
+input[type="button"].button-primary:focus {
+  color: #FFF;
+  background-color: #1EAEDB;
+  border-color: #1EAEDB;
+}
   
   /* Forms
   –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -245,7 +364,7 @@
   textarea {
     -webkit-appearance: none;
        -moz-appearance: none;
-            appearance: none; }
+            appearance: none;}
   textarea {
     min-height: 65px;
     padding-top: 6px;
@@ -370,6 +489,39 @@
 
 /* Custom App CSS
 ---------------------------------------*/
+.logo{
+  width: 100%;
+  max-width: 200px;
+}
+
+
+.tab2_mini_container {
+  color: white;
+  border-radius: 5px;
+  position: relative;
+  text-align: center;
+  border: 2px solid lightgrey; 
+}
+
+.mini_container {
+  color: white;
+  border-radius: 5px;
+  position: relative;
+  text-align: center;
+  border: 2px solid lightgrey;
+  width: 200px; 
+}
+
+.text_input{
+  color: white;
+  width: 200px;
+  background-color: #242633;
+}
+
+::-webkit-input-placeholder {
+   color: white;
+}
+
 body{
     background-color: #1a1c23;
     color: #b2b2b2;
@@ -386,22 +538,6 @@ body{
 .span-menu:hover, .selected{
   text-decoration: underline;
   text-decoration-color: #55575D;
-}
-
-.table-news{
-  border: 1px solid #55575D;
-  border-collapse: collapse;
-  width: 100%;
-  max-height: 500px;
-}
-
-.table-news td{
-  border: 1px solid #55575D;
-}
-
-.table-news tr:hover{
-  background-color: #292B33;
-  cursor: pointer;
 }
 
 .table-orders{
@@ -432,47 +568,6 @@ th{
   text-align: left;
 }
 
-.text-center{
-  text-align:center;
-}
-
-.div-news{
-  padding: 24px;
-}
-
-
-.p-news{
-  display:inline;
-  font-size:12px;
-  padding: 3px;
-  margin: 0;
-}
-
-.float-right{
-  float:right;
-}
-
-.div-left-panel{
-  background-color: #22252b;
-  color: #b2b2b2;
-  margin: 0px;
-  height:100%;
-  /*overflow-y: scroll;*/
-}
-
-.div-right-panel{
-  padding: 80px 64px 64px 32px;
-}
-
-.div-bid-ask{
-  max-height: 45%;
-  padding-bottom: 15px;
-}
-
-.div-top-bar{
-  color: #ededed;
-  font-size: 18px;
-}
 
 .div-info{
   padding: 32px;
@@ -550,13 +645,6 @@ th{
   text-align: center;
 }
 
-.logo{
-  width: 100%;
-  max-width: 200px;
-}
-
-
-
 button{
   color: #EDEDED;
   margin: 0px;
@@ -624,15 +712,6 @@ div.Select-value, .Select-control,div.period, .Select-input{
   position: absolute;
 }
 
-.dropdown-period{
-  width: 100px;
-}
-
-.chart-top-bar{
-  background-color: #30333d;
-  padding:12px;
-}
-
 .chart-title{
   margin-top: 3px;
   margin-left: 12px;
@@ -666,11 +745,6 @@ div.Select-value, .Select-control,div.period, .Select-input{
   display: inline-block;
 }
 
-.bottom-dropdown{
-  width: 200px;
-  padding:12px;
-}
-
 .Select-placeholder{
   padding-left:21px;
 }
@@ -691,9 +765,9 @@ div.Select-value, .Select-control,div.period, .Select-input{
 
 input[type="email"], input[type="number"], input[type="search"], input[type="text"], input[type="tel"], input[type="url"], input[type="password"], textarea, select{
   border: 1px solid #b4b4b4;
-  background-color:#262a30;
+  background-color:#242633;
   border-radius: 5px;
-  color: #b4b4b4;
+  color: white;
 }
 
 .modal {
