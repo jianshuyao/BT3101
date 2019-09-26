@@ -107,14 +107,14 @@
   /* Tabs
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
-.tabs {
+#tabs {
     width: 90%;
 }
 
 .custom-tabs {
   background-color: #1E2130;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 17px;
   cursor: pointer;
   margin-right: 50px;
   margin-left: 50px;
@@ -522,6 +522,14 @@ input[type="button"].button-primary:focus {
    color: white;
 }
 
+.table-trades{
+  width: 100%;
+  background-color: #22252b;
+  color: lightgrey;
+  overflow-x: auto;
+  height: 8rem,
+}
+
 body{
     background-color: #1a1c23;
     color: #b2b2b2;
@@ -712,19 +720,21 @@ div.Select-value, .Select-control,div.period, .Select-input{
   position: absolute;
 }
 
+.chart-top-bar{
+  background-color: #30333d;
+  padding:12px;
+  padding: 1rem 2rem;
+}
+
 .chart-title{
   margin-top: 3px;
   margin-left: 12px;
-}
-
-.chart-title:hover{
-  text-decoration: underline;
-  text-decoration-color: #55575D;
-  cursor: pointer;
+  font-size: 18px;
 }
 
 .chart-graph{
   padding-bottom: 16px;
+  background-color: #21252C;
 }
 
 .inline-block{
