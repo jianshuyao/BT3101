@@ -288,8 +288,7 @@ app.layout = html.Div([
                                     ])
                         ]),
                             
-                        dcc.Graph(id='tab3 daily pnl',
-                                  figure={'layout':{'title': 'Daily PnL'}}),
+                        dcc.Graph(id='tab3 daily pnl'),
                     ], 
                     className = "eight columns",
                     style = {'padding': 10, 'width': 800})
@@ -479,14 +478,17 @@ def update_tab1_pnl(user):
     portfolios = np.unique(portfolios)
     return {'layout': {"paper_bgcolor": "rgba(0,0,0,0)",
                        "plot_bgcolor": "rgba(0,0,0,0)",
-                       "font": {"color": "lightgrey"}
+                       "font": {"color": "lightgrey"},
+                       "margin": {'t': 30},
+                       "xaxis": dict(title= 'Product'),
+                       "yaxis": dict(title= 'Price')
                         },
             'data': [
                         go.Scatter(
-                        x = pnl[pnl['Portfolio'] == i]['Product'],
-                        y = pnl[pnl['Portfolio'] == i]['Price'],
+                        x = pnl[pnl['Portfolio'] == portfolio]['Product'],
+                        y = pnl[pnl['Portfolio'] == portfolio]['Price'],
                         mode = 'lines+markers',
-                        name = i) for i in portfolios                    
+                        name = portfolio) for portfolio in portfolios                    
                     ]}    
 
 
@@ -536,14 +538,15 @@ def update_tab3_daily(time,portfolio,user):
     
     return {'data': [go.Scatter(x=temp_df['Timestamp'], 
                                 y=temp_df['Price'],
-                                mode='lines+markers',
-                                name='lines+markers')],
+                                mode = 'lines+markers')],
             'layout': {"paper_bgcolor": "rgba(0,0,0,0)",
                        "plot_bgcolor": "rgba(0,0,0,0)",
                        "font": {"color": "lightgrey"},
+                       "margin": {'t': 30},
                        "xaxis": dict(title= 'Time'),
                        "yaxis": dict(title= 'Price')
-                        },}
+                        },
+            }
 
 
 # tab 4 graph
@@ -553,8 +556,20 @@ def update_tab3_daily(time,portfolio,user):
 def update_tab4_team_view(time):
     tab4_df_user = trade_table[['User','Timestamp','Time Frame','Size/Notional']]
     temp_df = tab4_df_user[tab4_df_user['Time Frame']==time].sort_values('Timestamp')
+    users = list(temp_df['User'])
+    users = np.unique(users)
 #    temp = trade_table[trade_table['Time Frame']==time]
-    fig = px.line(temp_df, x="Timestamp", y="Size/Notional",color='User',title='Team View')
+    fig = {'data': [go.Scatter(x=temp_df[temp_df['User'] == user]["Timestamp"], 
+                               y=temp_df[temp_df['User'] == user]["Size/Notional"],
+                               mode = 'lines+markers',
+                               name = user) for user in users],
+           'layout':{"paper_bgcolor": "rgba(0,0,0,0)",
+                       "plot_bgcolor": "rgba(0,0,0,0)",
+                       "font": {"color": "lightgrey"},
+                       "margin": {'t': 30},
+                       "xaxis": dict(title= 'Time'),
+                       "yaxis": dict(title= 'PnL')}
+          }
     
     return fig
 
