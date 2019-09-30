@@ -499,15 +499,6 @@ input[type="button"].button-primary:focus {
   max-width: 200px;
 }
 
-
-.tab2_mini_container {
-  color: white;
-  border-radius: 5px;
-  position: relative;
-  text-align: center;
-  border: 2px solid lightgrey; 
-}
-
 .mini_container {
   color: white;
   border-radius: 5px;
@@ -515,6 +506,7 @@ input[type="button"].button-primary:focus {
   text-align: center;
   border: 2px solid lightgrey;
   width: 200px; 
+  height: 80px;
 }
 
 .text_input{
@@ -729,6 +721,7 @@ div.Select-value, .Select-control,div.period, .Select-input{
   background-color: #30333d;
   padding:12px;
   padding: 1rem 2rem;
+  height: 35px;
 }
 
 .chart-title{
