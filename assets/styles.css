@@ -172,11 +172,12 @@
 /*Dropdown items*/
 .Select-control, .Select-multi-value-wrapper, .Select-menu-outer div {
   background-color: #242633;
+  color: white !important;
 }
 
 /*Dropdown items*/
 .Select-control, .Select, .Select-value-label, .Select-clear-zone {
-  color: white;
+  color: white !important;
 }
 
 
@@ -184,17 +185,19 @@
 .Select-menu-outer {
   background-color: #242633;
   border: 2px solid darkgray !important;
+  color: white !important
 }
 
 /*Dropdown items*/
 .Select-menu-outer div:hover {
   background-color: rgba(36, 38, 51, 0.5) !important;
   cursor: pointer;
+  color: white !important
 }
 
 /*Dropdown arrow + delete button*/
 .Select-control, .Select-control > span {
-  color: white;
+  color: white !important;
   background: #242633 !important;
 }
 
@@ -209,10 +212,12 @@
   border-radius: 4px;
   background-color: #242633;
   cursor: pointer;
+  color: white !important;
 }
 
 .Select.is-focused:not(.is-open) > .Select-control {
   border-color: #91dfd2 !important;
+  color: white !important
 }
 
   
@@ -757,6 +762,7 @@ div.Select-value, .Select-control,div.period, .Select-input{
 
 .Select-placeholder{
   padding-left:21px;
+  color: white
 }
 
 .button-buy-sell-chart{
