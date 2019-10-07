@@ -9,78 +9,120 @@ from datetime import datetime as dt
 import dash_table
 from textwrap import dedent as d
 import plotly.express as px
-
+from os import listdir
+from os.path import isfile, join
 
 #external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 #app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 app = dash.Dash(__name__)
+csv_path = 'user_csv'
 
+###### DATA INTAKE ########################
 # Initialise trade table
+def read_data(user):
+    file_names = [f for f in listdir(csv_path) if isfile(join(csv_path, f))]
+    
+    trade_table = pd.DataFrame(columns = ['Portfolio','Type of Trade','Direction','Product', 
+                                      'Price', 'Size/Notional', 'Tenor', 'Amount to Risk',
+                                      'Timeframe', 'Strategy Type','Timestamp','User'])
+    
+    if user=='all':
+        for trader in file_names:
+            cur=pd.read_csv(join(csv_path, trader)).dropna()
+            trade_table = trade_table.append(cur,sort=False)
+    elif user+'.csv' in file_names:
+        trade_table = pd.read_csv(join(csv_path, user+'.csv')).dropna()
+    
+    return trade_table.dropna()
+
 def load_data():
-    trade_table = pd.read_excel('trade_table.xlsx').dropna()
+    trade_table = read_data('all')
     portfolio_list = sorted(trade_table.Portfolio.unique())
     user_list = sorted(trade_table.User.unique())
     return trade_table, portfolio_list, user_list
 
 trade_table, portfolio_list, user_list = load_data()
+ratio_list = ['Sharpe Ratio', 'Hit Ratio', 'Sortino Ratio']
 
 
-# data processing
-# function for tab 1
+###### DATA Processing Functions ########################
+### function for tab 1
 def get_user():
     user = list(trade_table['User'])
     user = np.unique(user)
     return user
 
-# table for tab 3
-trade_table['Size/Notional'] = trade_table['Size/Notional'].astype('int')
-#create an empty df to hold data
-groupby_product = pd.DataFrame(columns=['Portfolio','Size/Notional'])
-groupby_product.index.name = 'Product'
-
-for p in trade_table.Portfolio.unique():
-    #first filter out transactions related to one portfolio and get only the product and sum up the size for each product
-    temp = trade_table[trade_table['Portfolio']==p][['Product','Size/Notional']].groupby('Product').sum()
-    #insert the column to indicate the portfolio
-    temp.insert(0,'Portfolio',temp.size*[p])
-    groupby_product = groupby_product.append(temp)
+### function for tab 3
+## function for table
+# input: df
+# output: df
+def tab3_get_data(trade_table, user):
+    ### filter to get user data
+    trade_table['Size/Notional'] = trade_table['Size/Notional'].astype('int')
+    trade_table = trade_table[trade_table.User==user]
     
-groupby_product = groupby_product.reset_index(level=['Product'])
-groupby_product = groupby_product[['Portfolio','Product','Size/Notional']]
-groupby_product = groupby_product.sort_values(by=['Portfolio', 'Product'])
+    #create an empty df to hold data
+    groupby_product = pd.DataFrame(columns=['Portfolio','Size/Notional'])
+    groupby_product.index.name = 'Product'
+
+    for p in trade_table.Portfolio.unique():
+        #first filter out transactions related to one portfolio and get only the product and sum up the size for each product
+        temp = trade_table[trade_table['Portfolio']==p][['Product','Size/Notional']].groupby('Product').sum()
+        #insert the column to indicate the portfolio
+        temp.insert(0,'Portfolio',temp.size*[p])
+        groupby_product = groupby_product.append(temp)
+    
+    groupby_product = groupby_product.reset_index(level=['Product'])
+    groupby_product = groupby_product[['Portfolio','Product','Size/Notional']]
+    groupby_product = groupby_product.sort_values(by=['Portfolio', 'Product'])
+    return groupby_product
+
+# input: df
+# ouput: dash_table.DataTable
+def tab3_build_table(trade_table, user):
+    #trade_table = pd.DataFrame.from_dict(trade_table_store)
+    data_df = tab3_get_data(trade_table, user)
+    return dash_table.DataTable(
+        id = 'tab3 product table',
+        columns = [{"name": i, "id": i} for i in data_df.columns],
+        data = data_df.to_dict('records'),
+        style_cell={
+            'backgroundColor': '#22252b',
+            'textAlign': 'center',
+            'color': 'white'
+        }
+    )
+
+## function for ratios
+def tab3_ratio_box(ratio_name):
+    r_id = ratio_name.lower().replace(' ','_')
+    return html.Div([
+        html.H6(id = r_id + "_text"), html.P(ratio_name)],
+        id=r_id,
+        className="mini_container",
+        style = {'padding': 20, 'margin-bottom': 20})
+
+def tab3_build_ratio(ratio_list):
+    result=[]
+    for ratio in ratio_list:
+        result.append(tab3_ratio_box(ratio))
+    return result
 
 
-# Dashboard layout
-app.layout = html.Div([
-    
-    html.Div([
-        html.Div(html.Img(className="logo", src=app.get_asset_url("logo.png")), 
-                 className = "one column"),
-        html.Div(
-                 html.H3('NatWest Risk Analytics Platform'),
-                 className = "six columns", style = {'color': 'white', 'font-size': 20, 'margin-top': 20})
-        ], className = "row", style = {'margin-left': 50, 'margin-right': 50}
-    ),
-    
-    dcc.Tabs(id="tabs", className='custom-tabs', children=[
-        dcc.Tab(label = 'Individual Summary', className = 'custom-tab', selected_className="custom-tab--selected", children = [
-            html.Div([
-                #html.H3('Individual Summary'),
-                    
+###### Development of respective tabs ########################
+def init_tab_1():
+    return dcc.Tab(label = 'Individual Summary', className = 'custom-tab', selected_className="custom-tab--selected", 
+                   children = [           
+            html.Div([                    
                 html.Div([
                         # user selection
                         html.Div([
                             html.H6('Select User'),
-                            dcc.Dropdown(
-                                        id = 'tab1_user_selection',
-                                        options = ([
-                                                    {'label': user, 'value': user}
-                                                    for user in get_user()]
-                                        ),
-                                        value = get_user()[0]),                                    
-                                         
+                            dcc.Dropdown(id = 'tab1_user_selection',
+                                         options = ([{'label': user, 'value': user}for user in get_user()]),
+                                         value = get_user()[0]),    
                         ], style = {'margin':10}),
                             
                        # summary of total portfolios and PnL 
@@ -123,9 +165,10 @@ app.layout = html.Div([
             ],
             className = 'twelve columns',
             style = {'margin-left': 30, 'margin-right': 30, 'margin-top': 10, 'margin-bottom': 30})    
-        ]),
-        
-        dcc.Tab(label='Add Transaction', className = 'custom-tab', selected_className="custom-tab--selected", children = [ 
+        ])
+
+def init_tab_2():
+    return dcc.Tab(label='Add Transaction', className = 'custom-tab', selected_className="custom-tab--selected", children = [ 
            html.Div([     
                 #html.H3('Add Transaction'),
                 html.Div([
@@ -199,125 +242,82 @@ app.layout = html.Div([
                                          }),
                 ], style = {'height': 400,'margin-left': 50, 'width': 1200, 'margin-top': 15})  
             ], style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30})
-        ]),
-        
-        
-        dcc.Tab(label='Individual Analysis', className = 'custom-tab', selected_className="custom-tab--selected", children = [
-            html.Div([    
-                    #html.H3('Individual Analysis'),  
-                html.Div([    
-                    html.Div([
-                         ###Dropdown to select user
-                        html.Div([
-                            html.H6('Select User'),
-                            dcc.Dropdown(id = 'tab3 user',
-                                         options = [{'label': 'Trader '+i, 'value': i} for i in user_list],
-                                         value=user_list[0])],
-                            style = {'padding':8},
-                        ),
-                        
-                        ###Drodown to select time unit
-#                        html.Div([
-#                            html.H6('Select Timeframe'),
-#                            dcc.Dropdown(id = 'tab3 time unit',
-#                                         options=[{'label': 'Daily', 'value': 'day'},
-#                                                  {'label': 'Weekly', 'value': 'week'},
-#                                                  {'label': 'Monthly', 'value': 'month'}],
-#                                         value='day')],
-#                            style = {'padding':8},
-#                        ),
-                    
-                        ###Dropdown to select portfolio
-                        html.Div([
-                            html.H6('Select Portfolio'),
-                            dcc.Dropdown(id = 'tab3 portfolio',
-                                         options= [{'label': 'Portfolio '+i, 'value': i} for i in portfolio_list],
-                                         value=portfolio_list[0])],
-                            style = {'padding':8},
-                        ),
-                    ], 
-                    className = "four columns"),                          
-                                        
-                    html.Div([
-                        html.Div(
-                            className = "row chart-top-bar",
-                            children = [
-                                html.Div(
-                                    className="inline-block chart-title",
-                                    children = "PnL Performance",
-                                ),
-                                        
-                                html.Div(
-                                    className = "graph-top-right inline-block",
-                                    children = [
-                                        html.Div([
-                                            #html.H6('Select Timeframe'),
-                                            dcc.Dropdown(id = 'tab3 time unit',
-                                                         options=[{'label': 'Daily', 'value': 'day'},
-                                                                  {'label': 'Weekly', 'value': 'week'},
-                                                                  {'label': 'Monthly', 'value': 'month'}],
-                                                         value='day')],
-                                        style = {'width': 300}),
-                                    ])
-                        ]),
-                            
-                        dcc.Graph(id='tab3 daily pnl'),
-                    ], 
-                    className = "eight columns",
-                    style = {'padding': 10, 'width': 800})
-                    
-                ], 
-                className = "twelve columns",
-                style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30}),  
-                            
-                    ###text boxes to display ratio for selected porfolio
-                html.Div([   
-                    html.Div([
-                        html.Div([
-                                html.H6(id="sharpe_ratio_text"), html.P("Sharpe Ratio")],
-                                id="sharpe_ratio",
-                                className="mini_container",
-                                style = {'padding': 20, 'margin-bottom': 20}),
-                            
-                        html.Div([
-                                html.H6(id="hit_ratio_text"), html.P("Hit Ratio")],
-                                id="hit_ratio",
-                                className="mini_container",
-                                style = {'padding': 20, 'margin-bottom': 20}),
-                            
-                        html.Div(
-                                [html.H6(id="sortino_ratio_text"), html.P("Sortino Ratio")],
-                                id="sortino_ratio",
-                                className="mini_container",
-                                style = {'padding': 20, 'margin-bottom': 20})],
-                            
-                        id="info-container",
-                        className="four columns",
-                        style = {'padding': 10}),
-                        
-                        html.Div([
-                            dash_table.DataTable(
-                                id = 'groupby_product',
-                                columns = [{"name": i, "id": i} for i in groupby_product.columns],
-                                data = groupby_product.to_dict('records'),
-                                style_cell={
-                                            'backgroundColor': '#22252b',
-                                            'textAlign': 'center',
-                                            'color': 'white'
-                                }
-                            )], 
-                            className = 'eight columns table-trades',
-                            style = {'height': 400, 'padding': 10, 'width': 800})
-                 ], 
-                 className = "twelve columns",
-                 style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30})
-                        
-             ], style = {'margin-left': 30, 'margin-right': 30, 'margin-top': 10, 'margin-bottom': 30})   
-        ]),
-        
-        
-        
-        dcc.Tab(label='Team Summary', className = 'custom-tab', selected_className="custom-tab--selected", children = [
+        ])
+
+def init_tab_3():
+    return dcc.Tab(label='Individual Analysis', className = 'custom-tab', selected_className="custom-tab--selected", 
+                   children = [
+                       html.Div([  
+                           html.Div([
+                               html.Div([
+                                   ###Dropdown to select user
+                                   html.Div([
+                                       html.H6('Select User'),
+                                       dcc.Dropdown(id = 'tab3 user',
+                                                    options = [{'label': 'Trader '+i, 'value': i} for i in user_list],
+                                                    value=user_list[0])],
+                                       style = {'padding':8},
+                                   ),
+                                   html.Div([
+                                       dcc.Dropdown(id = 'tab3 portfolio')],
+                                       style = {'padding':8}),
+                               ], 
+                                   className = "four columns"), 
+                               
+                               html.Div([
+                                   html.Div(
+                                       children = [
+                                           
+                                           html.Div(
+                                               className="inline-block chart-title",
+                                               children = "PnL Performance",
+                                           ),
+                                           html.Div(
+                                               className = "graph-top-right inline-block",
+                                               children = [
+                                                   html.Div([
+                                                       dcc.Dropdown(id = 'tab3 time unit',
+                                                                    options=[{'label': 'Daily', 'value': 'day'},
+                                                                             {'label': 'Weekly', 'value': 'week'},
+                                                                             {'label': 'Monthly', 'value': 'month'}],
+                                                                    value='day')],
+                                                       style = {'width': 300}),
+                                               ]
+                                           )
+                                       ]
+                                   ),
+                                   dcc.Graph(id='tab3 daily pnl'),
+                               ], 
+                                   className = "eight columns",
+                                   style = {'padding': 10, 'width': 800})
+                           ], 
+                               className = "twelve columns",
+                               style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30}),  
+                           
+                           html.Div([
+                               html.Div(id="info-container",
+                                        children = tab3_build_ratio(ratio_list),
+                                        className="four columns",
+                                        style = {'padding': 10}
+                                       ),
+                               html.Div(id='tab3_table',
+                                        children = tab3_build_table(trade_table,user_list[0]),
+                                        className = 'eight columns table-trades',
+                                        style = {'height': 400, 'padding': 10, 'width': 800}
+                                       )
+                           ],
+                               className = "twelve columns",
+                               style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30}
+                           )
+                       ],
+                           style = {'margin-left': 30, 'margin-right': 30, 'margin-top': 10, 'margin-bottom': 30}
+                       )
+                   ]
+                  )
+
+
+def init_tab_4():
+    return dcc.Tab(label='Team Summary', className = 'custom-tab', selected_className="custom-tab--selected", children = [
            html.Div([ 
                 #html.H3('Team Summary'),
 
@@ -435,8 +435,30 @@ app.layout = html.Div([
 
             ], style = {'margin-left': 30, 'margin-right': 30, 'margin-top': 10, 'margin-bottom': 30}),        
         ])
-    ])     
-])
+
+# Dashboard layout
+app.layout = html.Div(
+    children = [
+        html.Div([
+            html.Div(html.Img(className="logo", src=app.get_asset_url("logo.png")),className = "one column"),
+            html.Div(html.H3('NatWest Risk Analytics Platform'),
+                     className = "six columns", style = {'color': 'white', 'font-size': 20, 'margin-top': 20})
+        ], 
+            className = "row", style = {'margin-left': 50, 'margin-right': 50}
+        ),
+        
+        dcc.Tabs(id="tabs", 
+                 className='custom-tabs', 
+                 children=[
+                     init_tab_1(),
+                     init_tab_2(),
+                     init_tab_3(),
+                     init_tab_4()
+        ]),
+        
+        dcc.Store(id='trade_table_store', data = trade_table.to_dict('records'))
+    ]
+)
 
 ## tab 1 display portfolios
 @app.callback(Output('tab1_total_portfolio', 'children'),
@@ -478,23 +500,23 @@ def update_tab1_pnl(user):
                         name = portfolio) for portfolio in portfolios                    
                     ]}    
 
-
 # tab 2 update table
 @app.callback(
-    Output('trade-table', 'data'),
+    [Output('trade_table_store', 'data'),
+     Output('trade-table', 'data')],
     [Input('button', 'n_clicks')],
     [State('portfolio', 'value'),
      State('product', 'value'),
-    State('type', 'value'),
-    State('direction', 'value'),
-    State('price', 'value'),
-    State('size', 'value'),
-    State('tenor', 'value'),
-    State('risk', 'value'),
-    State('timeframe', 'value'),
-    State('strategy', 'value'),
-    State('timestamp', 'date'),
-    State('user', 'value')])
+     State('type', 'value'),
+     State('direction', 'value'),
+     State('price', 'value'),
+     State('size', 'value'),
+     State('tenor', 'value'),
+     State('risk', 'value'),
+     State('timeframe', 'value'),
+     State('strategy', 'value'),
+     State('timestamp', 'date'),
+     State('user', 'value')])
 def update_table(n_clicks, portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user):
     index = len(trade_table)
     trade_table.loc[index, 'Portfolio'] = portfolio
@@ -511,16 +533,35 @@ def update_table(n_clicks, portfolio, type, product, direction, price, size, ten
     trade_table.loc[index, 'User'] = user
     if portfolio not in portfolio_list: portfolio_list.append(portfolio)
     if user not in user_list: user_list.append(user)
-    trade_table.to_excel('trade_table.xlsx')
-    return trade_table.to_dict('records') 
+    trade_table[trade_table.User==user].to_csv(join(csv_path,user+'.csv'))
+    return trade_table.to_dict('records'), trade_table.to_dict('records') 
 
+###tab3 dropdown by user
+@app.callback(Output('tab3 portfolio', 'options'),
+              [Input('tab3 user', 'value'),
+               Input('trade_table_store', 'data')])
+def update_portfolio(user, data_dict):
+    data_df = pd.DataFrame.from_dict(data_dict)
+    data = data_df[data_df.User==user]
+    pfl_list = sorted(data.Portfolio.unique())
+    return [{'label': 'Portfolio '+i, 'value': i} for i in pfl_list]
 
-###tab3 daily pnl
+###tab3 update table by user
+@app.callback(Output('tab3 product table', 'data'),
+              [Input('tab3 user', 'value'),
+               Input('trade_table_store', 'data')])
+def update_tab3_table(user, data_dict):
+    data = pd.DataFrame.from_dict(data_dict)
+    return tab3_get_data(data,user).to_dict('records')
+
+###tab3 update graph
 @app.callback(Output('tab3 daily pnl', 'figure'),
               [Input('tab3 time unit', 'value'),
                Input('tab3 portfolio', 'value'),
-               Input('tab3 user', 'value')])
-def update_tab3_daily(time,portfolio,user):
+               Input('tab3 user', 'value')],
+              [State('trade_table_store', 'data')])
+def update_tab3_daily(time,portfolio,user, trade_table_store):
+    trade_table = pd.DataFrame.from_dict(trade_table_store)
     temp_df = trade_table.loc[(trade_table['Portfolio']==portfolio) 
                               & (trade_table['User'] == user)]
     
@@ -558,7 +599,9 @@ def update_tab3_daily(time,portfolio,user):
                        "yaxis": dict(title= 'price', range=[min(Y),max(Y)])
                       },
             'data': [go.Scatter(x = X, y = Y, mode = 'lines+markers')]
-           }   
+           }  
+
+
 
 # tab 4 graph
 @app.callback(Output('tab4 team view', 'figure'),

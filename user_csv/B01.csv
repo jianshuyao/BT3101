@@ -1,0 +1,10 @@
+,Unnamed: 0,Portfolio,Type of Trade,Direction,Product,Price,Size/Notional,Tenor,Amount to Risk,Timeframe,Strategy Type,Timestamp,User
+9,9,B1,type,Short,JPY,3.0,20.0,tenor,2.7,31.0,strategy,2019-08-02,B01
+10,10,B1,type,Short,CHF,2.0,10.0,tenor,1.7,31.0,strategy,2019-08-03,B01
+11,11,B1,type,Long,USD,2.5,30.0,tenor,2.2,32.0,strategy,2019-08-04,B01
+12,12,B2,type,Long,JPY,3.0,20.0,tenor,2.7,38.0,strategy,2019-09-18,B01
+13,13,B2,type,Short,CHF,2.0,10.0,tenor,1.7,38.0,strategy,2019-09-19,B01
+14,14,B2,type,Long,USD,2.5,30.0,tenor,2.2,28.0,strategy,2019-07-09,B01
+15,15,B2,type,Short,JPY,3.0,20.0,tenor,2.7,38.0,strategy,2019-09-17,B01
+16,16,B3,type,Long,CHF,2.0,10.0,tenor,1.7,28.0,strategy,2019-07-11,B01
+17,17,B3,type,Long,USD,2.5,30.0,tenor,2.2,28.0,strategy,2019-07-10,B01
