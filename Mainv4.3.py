@@ -22,7 +22,7 @@ csv_path = 'user_csv'
 ###### DATA INTAKE ########################
 # Initialise trade table
 def read_data(user):
-    file_names = [f for f in listdir(csv_path) if isfile(join(csv_path, f))]
+    file_names = [f for f in listdir(csv_path) if isfile(join(csv_path, f)) and f[-4:]=='.csv']
     
     trade_table = pd.DataFrame(columns = ['Portfolio','Type of Trade','Direction','Product', 
                                       'Price', 'Size/Notional', 'Tenor', 'Amount to Risk',
@@ -31,7 +31,7 @@ def read_data(user):
     if user=='all':
         for trader in file_names:
             cur=pd.read_csv(join(csv_path, trader)).dropna()
-            trade_table = trade_table.append(cur,sort=False)
+            trade_table = trade_table.append(cur,sort=False,ignore_index=True)
     elif user+'.csv' in file_names:
         trade_table = pd.read_csv(join(csv_path, user+'.csv')).dropna()
     
@@ -53,6 +53,19 @@ def get_user():
     user = list(trade_table['User'])
     user = np.unique(user)
     return user
+
+### function for tab 2
+def tab2_build_table(trade_table):
+    return dash_table.DataTable(
+                                 columns = [{"name": i, "id": i} for i in trade_table.columns],
+                                 data = trade_table.to_dict('records'),
+                                 style_cell={
+                                            'backgroundColor': '#22252b',
+                                            'textAlign': 'center',
+                                            'color': 'white'
+                                 })
+                
+
 
 ### function for tab 3
 ## function for table
@@ -232,15 +245,9 @@ def init_tab_2():
                     html.Button('Add', id = 'button')
                 ], style = {'padding': 10,'margin-right': 200, 'display': 'flex', 'flex-direction': 'row-reverse'}),
                             
-                html.Div(className = 'table-trades', children = [
-                    dash_table.DataTable(id = 'trade-table',
-                                         columns = [{"name": i, "id": i} for i in trade_table.columns],
-                                         style_cell={
-                                            'backgroundColor': '#22252b',
-                                            'textAlign': 'center',
-                                            'color': 'white'
-                                         }),
-                ], style = {'height': 400,'margin-left': 50, 'width': 1200, 'margin-top': 15})  
+                html.Div(className = 'table-trades', id = 'trade-table',
+                         children = tab2_build_table(trade_table), 
+                         style = {'height': 400,'margin-left': 50, 'width': 1200, 'margin-top': 15})  
             ], style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30})
         ])
 
@@ -503,7 +510,7 @@ def update_tab1_pnl(user):
 # tab 2 update table
 @app.callback(
     [Output('trade_table_store', 'data'),
-     Output('trade-table', 'data')],
+     Output('trade-table', 'children')],
     [Input('button', 'n_clicks')],
     [State('portfolio', 'value'),
      State('product', 'value'),
@@ -531,10 +538,14 @@ def update_table(n_clicks, portfolio, type, product, direction, price, size, ten
     trade_table.loc[index, 'Strategy Type'] = strategy
     trade_table.loc[index, 'Timestamp'] = timestamp
     trade_table.loc[index, 'User'] = user
-    if portfolio not in portfolio_list: portfolio_list.append(portfolio)
-    if user not in user_list: user_list.append(user)
-    trade_table[trade_table.User==user].to_csv(join(csv_path,user+'.csv'))
-    return trade_table.to_dict('records'), trade_table.to_dict('records') 
+    trade_table[trade_table.User==user].to_csv(join(csv_path,user+'.csv'),index=False)
+    return trade_table.to_dict('records'), tab2_build_table(trade_table) 
+
+#@app.callback(Output('trade-table', 'data'),
+#              [Input('trade_table_store', 'data')])
+#def update_table(data_store):
+#    return data_store
+
 
 ###tab3 dropdown by user
 @app.callback(Output('tab3 portfolio', 'options'),
