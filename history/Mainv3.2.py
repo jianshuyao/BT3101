@@ -11,9 +11,9 @@ from textwrap import dedent as d
 import plotly.express as px
 
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+#external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__)
 
 # Initialise trade table
 data = [('A1', 'type','dir','SGD', 1, 10,'tenor', 0.8,'week','strategy','1','A01'),
@@ -195,7 +195,11 @@ app.layout = html.Div([
                             
                 html.Div([
                     dash_table.DataTable(id = 'trade-table',
-                                         columns = [{"name": i, "id": i} for i in trade_table.columns]),
+                                         columns = [{"name": i, "id": i} for i in trade_table.columns],
+        
+                            page_current = 0,
+                            page_size = 20,
+                            page_action = 'custom'),
                 ], style = {'padding': 20})     
         ]),
         
@@ -260,7 +264,7 @@ app.layout = html.Div([
                         dash_table.DataTable(
                             id = 'groupby_product',
                             columns = [{"name": i, "id": i} for i in groupby_product.columns],
-                            data = groupby_product.to_dict('records') 
+                            data = groupby_product.to_dict('records'),
                         )], 
                         style = {'padding': 20})
                 
@@ -375,7 +379,9 @@ def update_tab1_pnl(user):
 # tab 2 update table
 @app.callback(
     Output('trade-table', 'data'),
-    [Input('button', 'n_clicks')],
+    [Input('button', 'n_clicks'),
+     Input('trade-table', "page_current"),
+     Input('trade-table', "page_size")],
     [State('portfolio', 'value'),
      State('product', 'value'),
     State('type', 'value'),
@@ -388,7 +394,7 @@ def update_tab1_pnl(user):
     State('strategy', 'value'),
     State('timeframe', 'value'),
     State('user', 'value')])
-def update_table(n_clicks, portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user):
+def update_table(n_clicks, page_current, page_size, portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user):
     index = len(trade_table)
     trade_table.loc[index, 'Portfolio'] = portfolio
     trade_table.loc[index, 'Type of Trade'] = type
@@ -402,7 +408,9 @@ def update_table(n_clicks, portfolio, type, product, direction, price, size, ten
     trade_table.loc[index, 'Strategy Type'] = strategy
     trade_table.loc[index, 'Timestamp'] = timestamp
     trade_table.loc[index, 'User'] = user
-    return trade_table.head().to_dict('records')
+    return trade_table.iloc[
+                             page_current * page_size:(page_current + 1) * page_size
+            ].to_dict('records')
 
 
 ###tab3 daily pnl
