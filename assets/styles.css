@@ -1,5 +1,6 @@
 /* Table of contents
 ––––––––––––––––––––––––––––––––––––––––––––––––––
+- Banner
 - Grid
 - Tabs
 - Dropdown
@@ -17,6 +18,63 @@
 - Custom App CSS
 */
 
+
+/* Banner
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.banner {
+  height: fit-content;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #4B5460;
+  margin-right: 50px;
+  margin-left: 50px;
+  width: 90%;
+}
+
+.banner-title{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.banner h3 {
+  font-weight: 500;
+  font-size: 3rem;
+  line-height: 1.2;
+  letter-spacing: 0.1rem;
+  color: white;
+}
+
+.banner-login{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.banner h5 {
+  color: white;
+  line-height: 1.2;
+  font-size: 2rem;
+  margin-right: 20px;
+}
+
+.banner-dropdown {
+  margin-right: 10px;
+  height: 3rem;
+  justify-content: flex-end;
+  width: 200px;
+}
+
+.banner-logo {
+  height: 10rem;
+  width: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
 
 /* Grid
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -113,9 +171,13 @@
 
 .custom-tabs {
   background-color: #1E2130;
+  text-transform: uppercase;
+  height: fit-content;
   font-weight: 600;
-  font-size: 17px;
+  font-size: 1.6rem;
   cursor: pointer;
+  line-height: 0.8;
+  text-align: center;
   margin-right: 50px;
   margin-left: 50px;
 }
@@ -132,8 +194,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-align: center;
   cursor: pointer;
-  height: 60px;
+  height: 5rem;
 }
 
 .custom-tab--selected {
@@ -212,7 +275,7 @@
   border-radius: 4px;
   background-color: #242633;
   cursor: pointer;
-  color: white !important;
+  color: grey !important;
 }
 
 .Select.is-focused:not(.is-open) > .Select-control {
@@ -516,15 +579,7 @@ input[type="button"].button-primary:focus {
 }
 
 ::-webkit-input-placeholder {
-   color: white;
-}
-
-.table-trades{
-  width: 100%;
-  background-color: #22252b;
-  color: lightgrey;
-  overflow-x: auto;
-  height: 8rem,
+   color: grey;
 }
 
 body{
@@ -751,25 +806,6 @@ div.Select-value, .Select-control,div.period, .Select-input{
 
 .graph-top-bar{
   display: inline-block;
-}
-
-.Select-placeholder{
-  padding-left:21px;
-  color: white
-}
-
-.button-buy-sell-chart{
-  width: 48%;
-  text-align: center;
-  display: inline-block;
-}
-
-
-.button-buy-sell-chart-right{
-  width: 48%;
-  text-align: center;
-  display: inline-block;
-  float: right;
 }
 
 input[type="email"], input[type="number"], input[type="search"], input[type="text"], input[type="tel"], input[type="url"], input[type="password"], textarea, select{
