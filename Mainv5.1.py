@@ -600,8 +600,7 @@ def update_tab1_pnl(user):
 @app.callback(
     [Output('confirm', 'displayed'),
      Output('trade_table_store', 'data'),
-     Output('tab2_trade_table', 'data'),
-     Output('user_login', 'options')],
+     Output('tab2_trade_table', 'data')],
     [Input('add', 'submit_n_clicks'),
      Input('tab2_trade_table', "sort_by"),
      Input('user_login', 'value')],
@@ -646,10 +645,20 @@ def update_table(submit_n_clicks, sort_by, login, portfolio, type, product, dire
         trade_table.loc[index, 'Amount to Risk'] = risk
         trade_table.loc[index, 'Timeframe'] = timeframe
         trade_table.loc[index, 'Strategy Type'] = strategy
-        trade_table.loc[index, 'Timestamp'] = timestamp.date()
+        trade_table.loc[index, 'Timestamp'] = timestamp
         trade_table.loc[index, 'User'] = user
         trade_table[trade_table.User == user].to_csv(join(csv_path, user + '.csv'), index = False)
-        user_list.append(user)
+        if len(sort_by):
+            trade_df = trade_user.sort_values(
+            [col['column_id'] for col in sort_by],
+            ascending=[
+                col['direction'] == 'asc'
+                for col in sort_by
+            ],
+            inplace=False
+            )
+        else:
+            trade_df = trade_user
     return False, trade_table.to_dict('records'), trade_df.to_dict('records')
 
 
