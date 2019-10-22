@@ -12,6 +12,7 @@ from textwrap import dedent as d
 import plotly.express as px
 from os import listdir
 from os.path import isfile, join
+from Data_Computation import *
 
 app = dash.Dash(__name__)
 csv_path = 'user_csv'
@@ -582,25 +583,33 @@ def display_tab1_pnl(user):
 
 ## tab 1 display pnl charts
 @app.callback(Output('tab1_pnl_performance', 'figure'),
-              [Input('user_login', 'value')])
-def update_tab1_pnl(user):
-    pnl = trade_table[trade_table['User'] == user]
-    #pnl['Amount'] = pnl['Price'] * pnl['Size/Notional']
-    portfolios = list(trade_table[trade_table['User'] == user]['Portfolio'])
-    portfolios = np.unique(portfolios)
+              [Input('user_login', 'value'),
+               Input('tab1_date_range', 'start_date'),
+               Input('tab1_date_range', 'end_date')])
+def update_tab1_pnl(user, start_date, end_date):
+    start_date = datetime.strptime(start_date, "%Y-%m-%d").strftime('%d/%m/%Y')
+    end_date = datetime.strptime(end_date, "%Y-%m-%d").strftime('%d/%m/%Y')
+    
+    transaction = trade_table[trade_table['User'] == user]
+    trans_preprocessing(transaction)
+
+    pnl = pnl_trader(start_date, end_date, transaction_A, df)
+    #pnl = pnl_trader('20/08/2019','15/09/2019',transaction,df) #TODO: 把Currenry整同步了
+    pnl.reset_index(level=0, inplace=True)
     return {'layout': {"paper_bgcolor": "rgba(0,0,0,0)",
                        "plot_bgcolor": "rgba(0,0,0,0)",
                        "font": {"color": "lightgrey"},
                        "margin": {'t': 30},
-                       "xaxis": dict(title= 'Product'),
-                       "yaxis": dict(title= 'Price')
+                       "xaxis": dict(title= 'Date'),
+                       "yaxis": dict(title= 'PnL')
                         },
             'data': [
                         go.Scatter(
-                        x = pnl[pnl['Portfolio'] == portfolio]['Product'],
-                        y = pnl[pnl['Portfolio'] == portfolio]['Price'],
-                        mode = 'lines+markers',
-                        name = portfolio) for portfolio in portfolios                    
+                        #x = pnl[pnl['Portfolio'] == portfolio]['Product'],
+                        x = pnl['Date'],
+                        #y = pnl[pnl['Portfolio'] == portfolio]['Price'],
+                        y = pnl['PnL'],
+                        mode = 'lines+markers')                    
                     ]}    
 
 # tab 2 update table
@@ -827,4 +836,5 @@ def update_tab4_aggregated_view(time):
 
 if __name__ == '__main__':
     app.debug = True
+    hello_world()
     app.run_server()
