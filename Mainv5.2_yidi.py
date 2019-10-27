@@ -41,10 +41,10 @@ def load_data():
     portfolio_list = sorted(trade_table.Portfolio.unique())
     user_list = sorted(trade_table.User.unique())
     return trade_table, portfolio_list, user_list
-
-def save_file(df, user):
-    df = df[df.user==user]
-    df.to_csv(join(csv_path, user+'.csv'), index=False)
+    
+def save_file(full_trade_table, user):
+    user_df = full_trade_table[full_trade_table.User==user]
+    user_df.to_csv(join(csv_path, user+'.csv'), index = False)
 
 trade_table, portfolio_list, user_list = load_data()
 ratio_list = ['Sharpe Ratio', 'Hit Ratio', 'Sortino Ratio']
@@ -553,8 +553,8 @@ app.layout = html.Div(
         dcc.Store(id='trade_table_store', data = trade_table.to_dict('records')),
         dcc.Interval(
             id='interval-component',
-            interval=1*1000, # in milliseconds
-            n_intervals=0
+            interval=1*5000, # in milliseconds
+            n_intervals=50
         )
     ]
 )
@@ -609,7 +609,6 @@ def update_tab1_pnl(user):
 # tab 2 update table
 @app.callback(
     [Output('confirm', 'displayed'),
-     Output('trade_table_store', 'data'),
      Output('tab2_trade_table', 'data'),
      Output('user_login', 'options'),
      Output('user_login', 'value')],
@@ -628,25 +627,24 @@ def update_tab1_pnl(user):
      State('strategy', 'value'),
      State('timestamp', 'date'),
      State('user', 'value')])
-def update_table(submit_n_clicks, sort_by, login, portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user):
+def update_table(submit_n_clicks, sort_by, 
+                 login, portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user):
+    
     trade_user = trade_table[trade_table.User == login]
     options = [{'label': user, 'value': user}for user in user_list]
+    
     if len(sort_by):
         trade_df = trade_user.sort_values(
         [col['column_id'] for col in sort_by],
-        ascending=[
-            col['direction'] == 'asc'
-            for col in sort_by
-        ],
-        inplace=False
-        )
-    else:
-        trade_df = trade_user
+        ascending=[col['direction'] == 'asc' for col in sort_by],
+        inplace=False)
+    else: trade_df = trade_user
+        
     if submit_n_clicks:
         inputs = [portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user]
         for input in inputs:
-            if input == None:
-               return True, trade_table.to_dict('records'), trade_df.to_dict('records'), options, login
+            if input == None: return True, trade_table.to_dict('records'), options, login
+            
         index = len(trade_table)
         trade_table.loc[index, 'Portfolio'] = portfolio
         trade_table.loc[index, 'Type of Trade'] = type
@@ -662,12 +660,14 @@ def update_table(submit_n_clicks, sort_by, login, portfolio, type, product, dire
         trade_table.loc[index, 'User'] = user
         trade_table[trade_table.User == user].to_csv(join(csv_path, user + '.csv'), index = False)
         trade_user = trade_table[trade_table.User == user]
+        
         if (user not in user_list):
             user_list.append(user)
             user_list.sort()
             options = [{'label': user, 'value': user}for user in user_list]
-        return False, trade_table.to_dict('records'), trade_user.to_dict('records'), options, user 
-    return False, trade_table.to_dict('records'), trade_df.to_dict('records'), options, login
+        save_file(trade_table, user)
+        return False, trade_table.to_dict('records'), options, user 
+    return False, trade_table.to_dict('records'), options, login
 
 
 ### tab 2 clear input
