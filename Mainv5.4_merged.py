@@ -12,6 +12,7 @@ from textwrap import dedent as d
 import plotly.express as px
 from os import listdir
 from os.path import isfile, join
+from Data_Computation import *
 
 app = dash.Dash(__name__)
 csv_path = 'user_csv'
@@ -41,7 +42,7 @@ def load_data():
     portfolio_list = sorted(trade_table.Portfolio.unique())
     user_list = sorted(trade_table.User.unique())
     return trade_table, portfolio_list, user_list
-    
+
 def save_file(full_trade_table, user):
     user_df = full_trade_table[full_trade_table.User==user]
     user_df.to_csv(join(csv_path, user+'.csv'), index = False)
@@ -75,16 +76,10 @@ def tab2_build_table(trade_table, user):
 ## function for table
 # input: df
 # output: df
-def tab3_get_data(trade_table, user, start, end):
+def tab3_get_data(trade_table, user):
     ### filter to get user data
     trade_table['Size/Notional'] = trade_table['Size/Notional'].astype('int')
     trade_table = trade_table[trade_table.User==user]
-    
-    ### 
-    if start:
-        trade_table = trade_table[trade_table.Timestamp>=start]
-    if end:
-        trade_table = trade_table[trade_table.Timestamp<=end]
     
     #create an empty df to hold data
     groupby_product = pd.DataFrame(columns=['Portfolio','Size/Notional'])
@@ -106,7 +101,7 @@ def tab3_get_data(trade_table, user, start, end):
 # ouput: dash_table.DataTable
 def tab3_build_table(trade_table, user):
     #trade_table = pd.DataFrame.from_dict(trade_table_store)
-    data_df = tab3_get_data(trade_table, user, None, None)
+    data_df = tab3_get_data(trade_table, user)
     return dash_table.DataTable(
         id = 'tab3 product table',
         columns = [{"name": i, "id": i} for i in data_df.columns],
@@ -399,7 +394,6 @@ def init_tab_3():
                    ]
                   )
 
-
 def init_tab_4():
     return dcc.Tab(label='Team Summary', className = 'custom-tab', selected_className="custom-tab--selected", children = [
            html.Div([ 
@@ -495,21 +489,20 @@ def init_tab_4():
                                 html.Div(
                                     className="inline-block chart-title",
                                     children = "Team PnL View (Individuals)",
-                                ),
-                                        
-                                html.Div(
-                                    #html.H6('Select Timeframe'),
-                                    className = "graph-top-right inline-block",
-                                    children = [
-                                        html.Div([
-                                            dcc.Dropdown(id='tab4 time unit',
-                                                         options=[{'label': 'Daily', 'value': 'day'},
-                                                                  {'label': 'Weekly', 'value': 'week'},
-                                                                  {'label': 'Monthly', 'value': 'month'}],
-                                                         value='day')],
-                                            style = {'width': 200}
-                                    )],
-                                )
+                                ),                                        
+                                # html.Div(
+                                #     #html.H6('Select Timeframe'),
+                                #     className = "graph-top-right inline-block",
+                                #     children = [
+                                #         html.Div([
+                                #             dcc.Dropdown(id='tab4 time unit',
+                                #                          options=[{'label': 'Daily', 'value': 'day'},
+                                #                                   {'label': 'Weekly', 'value': 'week'},
+                                #                                   {'label': 'Monthly', 'value': 'month'}],
+                                #                          value='day')],
+                                #             style = {'width': 200}
+                                #     )],
+                                # )
                             ], style = {'justify-content': 'center'}
                         ), 
     
@@ -553,12 +546,14 @@ app.layout = html.Div(
         dcc.Store(id='trade_table_store', data = trade_table.to_dict('records')),
         dcc.Interval(
             id='interval-component',
-            interval=1*5000, # in milliseconds
+            interval=5*1000, # every 5 seconds
             n_intervals=50
         )
     ]
 )
 
+
+### read file by interval
 @app.callback(Output('trade_table_store', 'data'),
               [Input('interval-component', 'n_intervals')])
 def update_data_source(n): 
@@ -585,25 +580,33 @@ def display_tab1_pnl(user):
 
 ## tab 1 display pnl charts
 @app.callback(Output('tab1_pnl_performance', 'figure'),
-              [Input('user_login', 'value')])
-def update_tab1_pnl(user):
-    pnl = trade_table[trade_table['User'] == user]
-    #pnl['Amount'] = pnl['Price'] * pnl['Size/Notional']
-    portfolios = list(trade_table[trade_table['User'] == user]['Portfolio'])
-    portfolios = np.unique(portfolios)
+              [Input('user_login', 'value'),
+               Input('tab1_date_range', 'start_date'),
+               Input('tab1_date_range', 'end_date')])
+def update_tab1_pnl(user, start_date, end_date):
+    start_date = datetime.strptime(start_date, "%Y-%m-%d").strftime('%d/%m/%Y')
+    end_date = datetime.strptime(end_date, "%Y-%m-%d").strftime('%d/%m/%Y')
+    
+    transaction = trade_table[trade_table['User'] == user]
+    trans_preprocessing(transaction)
+
+    pnl = pnl_trader(start_date, end_date, transaction_A, df)
+    #pnl = pnl_trader('20/08/2019','15/09/2019',transaction,df) #TODO: 把Currenry整同步了
+    pnl.reset_index(level=0, inplace=True)
     return {'layout': {"paper_bgcolor": "rgba(0,0,0,0)",
                        "plot_bgcolor": "rgba(0,0,0,0)",
                        "font": {"color": "lightgrey"},
                        "margin": {'t': 30},
-                       "xaxis": dict(title= 'Product'),
-                       "yaxis": dict(title= 'Price')
+                       "xaxis": dict(title= 'Date'),
+                       "yaxis": dict(title= 'PnL')
                         },
             'data': [
                         go.Scatter(
-                        x = pnl[pnl['Portfolio'] == portfolio]['Product'],
-                        y = pnl[pnl['Portfolio'] == portfolio]['Price'],
-                        mode = 'lines+markers',
-                        name = portfolio) for portfolio in portfolios                    
+                        #x = pnl[pnl['Portfolio'] == portfolio]['Product'],
+                        x = pnl['Date'],
+                        #y = pnl[pnl['Portfolio'] == portfolio]['Price'],
+                        y = pnl['PnL'],
+                        mode = 'lines+markers')                    
                     ]}    
 
 # tab 2 update table
@@ -635,9 +638,9 @@ def update_table(submit_n_clicks, sort_by,
     
     if len(sort_by):
         trade_df = trade_user.sort_values(
-        [col['column_id'] for col in sort_by],
-        ascending=[col['direction'] == 'asc' for col in sort_by],
-        inplace=False)
+            [col['column_id'] for col in sort_by],
+             ascending=[ col['direction'] == 'asc' for col in sort_by ],
+             inplace=False )
     else: trade_df = trade_user
         
     if submit_n_clicks:
@@ -660,7 +663,6 @@ def update_table(submit_n_clicks, sort_by,
         trade_table.loc[index, 'User'] = user
         trade_table[trade_table.User == user].to_csv(join(csv_path, user + '.csv'), index = False)
         trade_user = trade_table[trade_table.User == user]
-        
         if (user not in user_list):
             user_list.append(user)
             user_list.sort()
@@ -712,49 +714,64 @@ def update_portfolio(user, data_dict):
     pfl_list = sorted(data.Portfolio.unique())
     return [{'label': 'Portfolio '+i, 'value': i} for i in pfl_list]
 
-###tab3 table
-@app.callback(
-    Output('tab3 product table', 'data'),
-    [Input('tab3_date_range', 'start_date'),
-     Input('tab3_date_range', 'end_date'),
-     Input('trade_table_store', 'data'),
-     Input('user_login', 'value'),
-     Input('tab3 product table','sort_by')
-    ])
-def update_table(start_date, end_date, data_dict, user, sort_by):
+###tab3 update table by user
+@app.callback(Output('tab3 product table', 'data'),
+              [Input('user_login', 'value'),
+               Input('trade_table_store', 'data'),
+               Input('tab3 product table', 'sort_by')])
+def update_tab3_table(user, data_dict, sort_by):
     data = pd.DataFrame.from_dict(data_dict)
-    df = tab3_get_data(data,user, start_date, end_date)
-    
+    df = tab3_get_data(data,user)
     if len(sort_by):
         trade_df = df.sort_values(
-            [col['column_id'] for col in sort_by],
-            ascending=[col['direction'] == 'asc' for col in sort_by],
-            inplace=False)
-    else: trade_df = df
-    
+        [col['column_id'] for col in sort_by],
+        ascending=[
+            col['direction'] == 'asc'
+            for col in sort_by
+        ],
+        inplace=False
+        )
+    else:
+        trade_df = df
     return trade_df.to_dict('records')
 
 ###tab3 update graph
 @app.callback(Output('tab3 daily pnl', 'figure'),
-              [Input('tab3_date_range', 'start_date'),
-               Input('tab3_date_range', 'end_date'),
-               Input('trade_table_store', 'data'),
-               Input('user_login', 'value'),
-               Input('tab3 portfolio', 'value')])
-def update_tab3_daily(start, end, data_dict, user, portfolio):
-    trade_table = pd.DataFrame.from_dict(data_dict)
+              [Input('tab3 time unit', 'value'),
+               Input('tab3 portfolio', 'value'),
+               Input('user_login', 'value')],
+              [State('trade_table_store', 'data')])
+def update_tab3_daily(time,portfolio,user, trade_table_store):
+    trade_table = pd.DataFrame.from_dict(trade_table_store)
     temp_df = trade_table.loc[(trade_table['Portfolio']==portfolio) 
                               & (trade_table['User'] == user)]
     
-    if start: temp_df = temp_df[temp_df.Timestamp>=start]
-    if end: temp_df = temp_df[temp_df.Timestamp<=end]
-    
-    temp_df = temp_df[['Timestamp', 'Price']].groupby('Timestamp').sum()
-    temp_df = temp_df.reset_index(level=['Timestamp'])
-    temp_df = temp_df.sort_values('Timestamp')
+    if time == 'day':
+        temp_df = temp_df[['Timestamp', 'Price']].groupby('Timestamp').sum()
+        temp_df = temp_df.reset_index(level=['Timestamp'])
+        temp_df = temp_df.sort_values('Timestamp')
+                
+    elif time in ['week', 'month']:
+        ### first calculate daily pnl then add up days of same time frame
+        temp_df = temp_df[['Timeframe', 'Price']].groupby('Timeframe').sum()
+        temp_df = temp_df.reset_index(level=['Timeframe'])
+        temp_df['Timestamp'] = temp_df['Timeframe']
+        temp_df = temp_df.sort_values('Timestamp')
+        
+        if time == 'month':
+            ### add up weeks 4 by 4
+            week_num = temp_df.Timestamp.tolist()
+            price = temp_df.Price.tolist()
+            
+            monthly_pnl = []
+            
+            for i in range(0,len(week_num),4):
+                monthly_pnl.append(['WW'+str(week_num[i])+'~WW'+str(week_num[min((i+3),len(week_num)-1)]), sum(price[i:i+4])])
+            temp_df = pd.DataFrame(monthly_pnl,columns=['Timestamp','Price'])
 
     X = temp_df['Timestamp']
     Y = temp_df['Price']
+
     
     return {'layout': {"paper_bgcolor": "rgba(0,0,0,0)",
                        "plot_bgcolor": "rgba(0,0,0,0)",
@@ -767,16 +784,27 @@ def update_tab3_daily(start, end, data_dict, user, portfolio):
            }  
 
 
+
 # tab 4 graph
 @app.callback(Output('tab4 team view', 'figure'),
-              [Input('tab4 time unit', 'value')])
+              [Input('tab4_date_range', 'start_date'),
+               Input('tab4_date_range', 'end_date')],
+              [State('trade_table_store', 'data')])
+def update_tab4_team_view(start, end,trade_table_store):
+    trade_table = pd.DataFrame.from_dict(trade_table_store)
+    temp_df = trade_table
+    trans_preprocessing(temp_df)
 
-def update_tab4_team_view(time):
-    tab4_df_user = trade_table[['User','Timestamp','Timeframe','Size/Notional']]
-    temp_df = tab4_df_user[tab4_df_user['Timeframe']==time].sort_values('Timestamp')
     users = list(temp_df['User'])
     users = np.unique(users)
-#    temp = trade_table[trade_table['Time Frame']==time]
+
+    
+    if start: temp_df = temp_df[temp_df.Timestamp>=start]
+    if end: temp_df = temp_df[temp_df.Timestamp<=end]
+
+    # temp_df = temp_df.reset_index(level=['Timestamp'])
+    temp_df = temp_df.sort_values('Timestamp')
+
     fig = {'data': [go.Scatter(x=temp_df[temp_df['User'] == user]["Timestamp"], 
                                y=temp_df[temp_df['User'] == user]["Size/Notional"],
                                mode = 'lines+markers',
@@ -788,15 +816,30 @@ def update_tab4_team_view(time):
                        "xaxis": dict(title= 'Time'),
                        "yaxis": dict(title= 'PnL')}
           }
-    
+
+
     return fig
 
 # tab 4 graph 2
 @app.callback(Output('tab4 aggregated view', 'figure'),
-              [Input('tab4 time unit', 'value')])
+              [Input('tab4_date_range', 'start_date'),
+               Input('tab4_date_range', 'end_date')],
+              [State('trade_table_store', 'data')])
 
-def update_tab4_aggregated_view(time):
-    temp_df = trade_table[trade_table['Timeframe']==time].groupby('Timestamp')['Size/Notional'].sum().to_frame().reset_index()
+def update_tab4_aggregated_view(start, end, trade_table_store):
+    trade_table = pd.DataFrame.from_dict(trade_table_store)
+    temp_df = trade_table
+    trans_preprocessing(temp_df)
+
+    users = list(temp_df['User'])
+    users = np.unique(users)
+
+    
+    if start: temp_df = temp_df[temp_df.Timestamp>=start]
+    if end: temp_df = temp_df[temp_df.Timestamp<=end]
+
+
+    temp_df = temp_df.groupby('Timestamp')['Size/Notional'].sum().to_frame().reset_index()
 
     fig = {'data': [go.Scatter(x=temp_df["Timestamp"], 
                                y=temp_df["Size/Notional"],
@@ -816,4 +859,5 @@ def update_tab4_aggregated_view(time):
 
 if __name__ == '__main__':
     app.debug = True
+    hello_world()
     app.run_server()
