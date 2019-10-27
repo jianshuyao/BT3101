@@ -76,10 +76,16 @@ def tab2_build_table(trade_table, user):
 ## function for table
 # input: df
 # output: df
-def tab3_get_data(trade_table, user):
+def tab3_get_data(trade_table, user, start, end):
     ### filter to get user data
     trade_table['Size/Notional'] = trade_table['Size/Notional'].astype('int')
     trade_table = trade_table[trade_table.User==user]
+    
+    ### 
+    if start:
+        trade_table = trade_table[trade_table.Timestamp>=start]
+    if end:
+        trade_table = trade_table[trade_table.Timestamp<=end]
     
     #create an empty df to hold data
     groupby_product = pd.DataFrame(columns=['Portfolio','Size/Notional'])
@@ -101,7 +107,7 @@ def tab3_get_data(trade_table, user):
 # ouput: dash_table.DataTable
 def tab3_build_table(trade_table, user):
     #trade_table = pd.DataFrame.from_dict(trade_table_store)
-    data_df = tab3_get_data(trade_table, user)
+    data_df = tab3_get_data(trade_table, user, None, None)
     return dash_table.DataTable(
         id = 'tab3 product table',
         columns = [{"name": i, "id": i} for i in data_df.columns],
@@ -714,64 +720,49 @@ def update_portfolio(user, data_dict):
     pfl_list = sorted(data.Portfolio.unique())
     return [{'label': 'Portfolio '+i, 'value': i} for i in pfl_list]
 
-###tab3 update table by user
-@app.callback(Output('tab3 product table', 'data'),
-              [Input('user_login', 'value'),
-               Input('trade_table_store', 'data'),
-               Input('tab3 product table', 'sort_by')])
-def update_tab3_table(user, data_dict, sort_by):
+###tab3 table
+@app.callback(
+    Output('tab3 product table', 'data'),
+    [Input('tab3_date_range', 'start_date'),
+     Input('tab3_date_range', 'end_date'),
+     Input('trade_table_store', 'data'),
+     Input('user_login', 'value'),
+     Input('tab3 product table','sort_by')
+    ])
+def update_table(start_date, end_date, data_dict, user, sort_by):
     data = pd.DataFrame.from_dict(data_dict)
-    df = tab3_get_data(data,user)
+    df = tab3_get_data(data, user, start_date, end_date)
+    
     if len(sort_by):
         trade_df = df.sort_values(
-        [col['column_id'] for col in sort_by],
-        ascending=[
-            col['direction'] == 'asc'
-            for col in sort_by
-        ],
-        inplace=False
-        )
-    else:
-        trade_df = df
+            [col['column_id'] for col in sort_by],
+            ascending=[col['direction'] == 'asc' for col in sort_by],
+            inplace=False)
+    else: trade_df = df
+    
     return trade_df.to_dict('records')
 
 ###tab3 update graph
 @app.callback(Output('tab3 daily pnl', 'figure'),
-              [Input('tab3 time unit', 'value'),
-               Input('tab3 portfolio', 'value'),
-               Input('user_login', 'value')],
-              [State('trade_table_store', 'data')])
-def update_tab3_daily(time,portfolio,user, trade_table_store):
-    trade_table = pd.DataFrame.from_dict(trade_table_store)
+              [Input('tab3_date_range', 'start_date'),
+               Input('tab3_date_range', 'end_date'),
+               Input('trade_table_store', 'data'),
+               Input('user_login', 'value'),
+               Input('tab3 portfolio', 'value')])
+def update_tab3_daily(start, end, data_dict, user, portfolio):
+    trade_table = pd.DataFrame.from_dict(data_dict)
     temp_df = trade_table.loc[(trade_table['Portfolio']==portfolio) 
                               & (trade_table['User'] == user)]
     
-    if time == 'day':
-        temp_df = temp_df[['Timestamp', 'Price']].groupby('Timestamp').sum()
-        temp_df = temp_df.reset_index(level=['Timestamp'])
-        temp_df = temp_df.sort_values('Timestamp')
-                
-    elif time in ['week', 'month']:
-        ### first calculate daily pnl then add up days of same time frame
-        temp_df = temp_df[['Timeframe', 'Price']].groupby('Timeframe').sum()
-        temp_df = temp_df.reset_index(level=['Timeframe'])
-        temp_df['Timestamp'] = temp_df['Timeframe']
-        temp_df = temp_df.sort_values('Timestamp')
-        
-        if time == 'month':
-            ### add up weeks 4 by 4
-            week_num = temp_df.Timestamp.tolist()
-            price = temp_df.Price.tolist()
-            
-            monthly_pnl = []
-            
-            for i in range(0,len(week_num),4):
-                monthly_pnl.append(['WW'+str(week_num[i])+'~WW'+str(week_num[min((i+3),len(week_num)-1)]), sum(price[i:i+4])])
-            temp_df = pd.DataFrame(monthly_pnl,columns=['Timestamp','Price'])
+    if start: temp_df = temp_df[temp_df.Timestamp>=start]
+    if end: temp_df = temp_df[temp_df.Timestamp<=end]
+    
+    temp_df = temp_df[['Timestamp', 'Price']].groupby('Timestamp').sum()
+    temp_df = temp_df.reset_index(level=['Timestamp'])
+    temp_df = temp_df.sort_values('Timestamp')
 
     X = temp_df['Timestamp']
     Y = temp_df['Price']
-
     
     return {'layout': {"paper_bgcolor": "rgba(0,0,0,0)",
                        "plot_bgcolor": "rgba(0,0,0,0)",
@@ -783,13 +774,11 @@ def update_tab3_daily(time,portfolio,user, trade_table_store):
             'data': [go.Scatter(x = X, y = Y, mode = 'lines+markers')]
            }  
 
-
-
 # tab 4 graph
 @app.callback(Output('tab4 team view', 'figure'),
               [Input('tab4_date_range', 'start_date'),
-               Input('tab4_date_range', 'end_date')],
-              [State('trade_table_store', 'data')])
+               Input('tab4_date_range', 'end_date'),
+              Input('trade_table_store', 'data')])
 def update_tab4_team_view(start, end,trade_table_store):
     trade_table = pd.DataFrame.from_dict(trade_table_store)
     temp_df = trade_table
