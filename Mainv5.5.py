@@ -816,5 +816,4 @@ def update_tab4_aggregated_view(start, end, trade_table_store):
 
 if __name__ == '__main__':
     app.debug = True
-    hello_world()
     app.run_server()
