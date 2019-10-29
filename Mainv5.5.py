@@ -47,7 +47,7 @@ def save_file(full_trade_table, user):
     user_df = full_trade_table[full_trade_table.User==user]
     user_df.to_csv(join(csv_path, user+'.csv'), index = False)
 
-trade_table, portfolio_list, user_list = load_data()
+#trade_table, portfolio_list, user_list = load_data()
 ratio_list = ['Sharpe Ratio', 'Hit Ratio', 'Sortino Ratio']
 
 
@@ -160,8 +160,9 @@ def build_banner():
                                     html.H5("Hello"),
                                     dcc.Dropdown(id  = "user_login",
                                                  className = 'banner-dropdown',
-                                                 options = ([{'label': user, 'value': user}for user in user_list]),
-                                                 value = user_list[0])
+#                                                 options = ([{'label': user, 'value': user}for user in user_list]),
+#                                                 value = user_list[0]
+                                    )
                         ]
                     )
                 ]
@@ -182,8 +183,7 @@ def init_tab_1():
                            dcc.DatePickerRange(
                                 id = 'tab1_date_range',
                                 display_format='Y-M-D',
-                                end_date = dt.now().date(),
-                                start_date = min(trade_table['Timestamp'])
+                                end_date = dt.now().date()
                            )],
                            className = 'row',
                            style = {'display': 'flex', 'flex-direction': 'row', 'align-items': 'center', "margin-top": 30}
@@ -326,8 +326,7 @@ def init_tab_3():
         dcc.DatePickerRange(
             id = 'tab3_date_range',
             display_format='Y-M-D',
-            end_date = dt.now().date(),
-            start_date = min(trade_table['Timestamp'])
+            end_date = dt.now().date()
         )],
         className = 'row',
         style = {'display': 'flex', 'flex-direction': 'row', 'align-items': 'center', "margin-top": 30}
@@ -402,8 +401,7 @@ def init_tab_4():
                            dcc.DatePickerRange(
                                 id = 'tab4_date_range',
                                 display_format='Y-M-D',
-                                end_date = dt.now().date(),
-                                start_date = min(trade_table['Timestamp'])
+                                end_date = dt.now().date()
                            )],
                            className = 'row',
                            style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30,
@@ -544,6 +542,18 @@ def update_data_source(n):
     trade_table, portfolio_list, user_list = load_data()
     return trade_table.to_dict('records')
 
+### date picker range
+@app.callback([Output('tab1_date_range','start_date'),
+               Output('tab3_date_range', 'start_date'),
+               Output('tab4_date_range', 'start_date')],
+              [Input('user_login', 'value'),
+               Input('trade_table_store', 'data')])
+def update_datepicker(user, data_dict): 
+    trade_table = pd.DataFrame.from_dict(data_dict)
+    trade_user = trade_table[trade_table['User'] == user]
+    start_user = min(trade_user['Timestamp'])
+    start_all = min(trade_user['Timestamp'])
+    return start_user, start_user, start_all 
 
 ## tab 1 display pnl charts, portfolios and total pnl
 @app.callback([Output('tab1_pnl_performance', 'figure'),
@@ -588,7 +598,8 @@ def update_tab1_pnl(user, start_date, end_date):
      Output('user_login', 'options'),
      Output('user_login', 'value')],
     [Input('add', 'submit_n_clicks'),
-     Input('tab2_trade_table', "sort_by")],
+     Input('tab2_trade_table', "sort_by"),
+     Input('trade_table_store', 'data')],
     [State('user_login', 'value'),
      State('portfolio', 'value'),
      State('product', 'value'),
@@ -602,9 +613,13 @@ def update_tab1_pnl(user, start_date, end_date):
      State('strategy', 'value'),
      State('timestamp', 'date'),
      State('user', 'value')])
-def update_table(submit_n_clicks, sort_by, 
+def update_table(submit_n_clicks, sort_by, data_dict,
                  login, portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user):
     
+    trade_table = pd.DataFrame.from_dict(data_dict)
+    user_list = sorted(trade_table.User.unique())
+    if (login == None):
+        login = user_list[0]
     trade_user = trade_table[trade_table.User == login]
     options = [{'label': user, 'value': user}for user in user_list]
     
@@ -619,7 +634,7 @@ def update_table(submit_n_clicks, sort_by,
         inputs = [portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user]
         for input in inputs:
             if input == None: 
-                return True, trade_table.to_dict('records'), options, login
+                return True, trade_df.to_dict('records'), options, login
             
         index = len(trade_table)
         trade_table.loc[index, 'Portfolio'] = portfolio
@@ -640,41 +655,10 @@ def update_table(submit_n_clicks, sort_by,
             user_list.append(user)
             user_list.sort()
             options = [{'label': user, 'value': user}for user in user_list]
-        save_file(trade_table, user)
-        return False, trade_table.to_dict('records'), options, user 
-    return False, trade_user.to_dict('records'), options, login
+#        save_file(trade_table, user)
+        return False, trade_user.to_dict('records'), options, user 
+    return False, trade_df.to_dict('records'), options, login
 
-
-### tab 2 clear input
-#@app.callback(
-#    [Output('portfolio', 'value'),
-#     Output('product', 'value'),
-#     Output('type', 'value'),
-#     Output('direction', 'value'),
-#     Output('price', 'value'),
-#     Output('size', 'value'),
-#     Output('tenor', 'value'),
-#     Output('risk', 'value'),
-#     Output('timeframe', 'value'),
-#     Output('strategy', 'value'),
-#     Output('timestamp', 'date'),
-#     Output('user', 'value')],
-#    [Input('reset','submit_n_clicks')],
-#    [State('portfolio', 'value'),
-#     State('product', 'value'),
-#     State('type', 'value'),
-#     State('direction', 'value'),
-#     State('price', 'value'),
-#     State('size', 'value'),
-#     State('tenor', 'value'),
-#     State('risk', 'value'),
-#     State('timeframe', 'value'),
-#     State('strategy', 'value'),
-#     State('timestamp', 'date'),
-#     State('user', 'value')])
-#def update(clicks):
-#    if clicks:
-#        return None, None, None, None, None, None, None, None, None, None, None, None
 
 
 ###tab3 portfolio dropdown by user
