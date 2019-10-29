@@ -47,7 +47,7 @@ def save_file(full_trade_table, user):
     user_df = full_trade_table[full_trade_table.User==user]
     user_df.to_csv(join(csv_path, user+'.csv'), index = False)
 
-#trade_table, portfolio_list, user_list = load_data()
+trade_table, portfolio_list, user_list = load_data()
 ratio_list = ['Sharpe Ratio', 'Hit Ratio', 'Sortino Ratio']
 
 
@@ -598,9 +598,9 @@ def update_tab1_pnl(user, start_date, end_date):
      Output('user_login', 'options'),
      Output('user_login', 'value')],
     [Input('add', 'submit_n_clicks'),
-     Input('tab2_trade_table', "sort_by"),
-     Input('trade_table_store', 'data')],
-    [State('user_login', 'value'),
+     Input('tab2_trade_table', "sort_by")],
+    [State('trade_table_store', 'data'),
+     State('user_login', 'value'),
      State('portfolio', 'value'),
      State('product', 'value'),
      State('type', 'value'),
