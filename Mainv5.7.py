@@ -28,14 +28,14 @@ def read_data(user):
     
     if user=='all':
         for trader in file_names:
-            cur=pd.read_csv(join(csv_path, trader)).dropna()
+            cur=pd.read_csv(join(csv_path, trader))
             trade_table = trade_table.append(cur,sort=False,ignore_index=True)
     elif user+'.csv' in file_names:
-        trade_table = pd.read_csv(join(csv_path, user+'.csv')).dropna()
+        trade_table = pd.read_csv(join(csv_path, user+'.csv'))
     
     trade_table['Timestamp'] = pd.to_datetime(trade_table.Timestamp).apply(lambda x: x.date())
     
-    return trade_table.dropna()
+    return trade_table
 
 def load_data():
     trade_table = read_data('all')
@@ -174,13 +174,17 @@ def tab4_build_agg_graph(start, end, trade_table_store):
     users = list(temp_df['User'])
     users = np.unique(users)
 
-    if start: temp_df = temp_df[temp_df.Timestamp>=start]       
-    if end: temp_df = temp_df[temp_df.Timestamp<=end]
+    start = datetime.strptime(start, "%Y-%m-%d").strftime('%d/%m/%Y')
+    end = datetime.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
 
-    temp_df = temp_df.groupby('Timestamp')['Size/Notional'].sum().to_frame().reset_index()
+    pnl = pnl_team(start,end,temp_df,df)
+    pnl.reset_index(level=0,inplace=True)
+            
+    X = pnl['Date']
+    Y = pnl['PnL']
 
-    fig = {'data': [go.Scatter(x=temp_df["Timestamp"], 
-                               y=temp_df["Size/Notional"],
+    fig = {'data': [go.Scatter(x=X, 
+                               y=Y,
                                # mode = 'lines+markers',
                                fill = 'tozeroy',
                                )],
@@ -189,7 +193,7 @@ def tab4_build_agg_graph(start, end, trade_table_store):
                       "plot_bgcolor": "rgba(0,0,0,0)",
                       "font": {"color": "lightgrey"},
                       "margin": {'t': 30},
-                      "xaxis": dict(title= 'Time'),
+                      "xaxis": dict(title= 'Date'),
                       "yaxis": dict(title= 'PnL')}
             }
             
@@ -627,8 +631,8 @@ def update_tab1_pnl(user, start_date, end_date):
     portfolios = np.unique(portfolios)
     trans_preprocessing(transaction)
 
-    pnl = pnl_trader(start_date, end_date, transaction_A, df)
-    #pnl = pnl_trader('20/08/2019','15/09/2019',transaction,df) #TODO: 把Currenry整同步了
+    pnl = pnl_trader(start_date, end_date, transaction, df) 
+
     pnl.reset_index(level=0, inplace=True)
     figure = {'layout': {"paper_bgcolor": "rgba(0,0,0,0)",
                        "plot_bgcolor": "rgba(0,0,0,0)",
@@ -762,15 +766,14 @@ def update_tab3_daily(start, end, data_dict, user, portfolio):
                               & (trade_table['User'] == user)]
     trans_preprocessing(temp_df)
     
-    if start: temp_df = temp_df[temp_df.Timestamp>=start]
-    if end: temp_df = temp_df[temp_df.Timestamp<=end]
-    
-    temp_df = temp_df[['Timestamp', 'Price']].groupby('Timestamp').sum()
-    temp_df = temp_df.reset_index(level=['Timestamp'])
-    temp_df = temp_df.sort_values('Timestamp')
+    start = datetime.strptime(start, "%Y-%m-%d").strftime('%d/%m/%Y')
+    end = datetime.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
 
-    X = temp_df['Timestamp']
-    Y = temp_df['Price']
+    pnl = pnl_portfolio(start, end, temp_df, portfolio, df)  
+    #pnl = pnl_portfolio(start, end, transaction_A, portfolio, df)
+    pnl.reset_index(level=0, inplace=True)
+    X = pnl['Date']
+    Y = pnl['PnL']
     
     return {'layout': {"paper_bgcolor": "rgba(0,0,0,0)",
                        "plot_bgcolor": "rgba(0,0,0,0)",
