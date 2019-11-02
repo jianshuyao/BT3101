@@ -1,0 +1,16 @@
+Portfolio,Type of Trade,Direction,Product,Price,Size/Notional,Tenor,Amount to Risk,Timeframe,Strategy Type,Timestamp,User
+B2,Outright,long,SGD,1.3623,10,,50000,,Strategy,28/8/19,B
+B2,Outright,long,SGD,1.3808,15,,50000,,Strategy,29/8/19,B
+B2,Outright,short,SGD,1.3842,10,,50000,,Strategy,30/8/19,B
+B2,Outright,long,INR,71.1475,20,,50000,,Strategy,30/8/19,B
+B2,Outright,short,INR,71.1687,15,,50000,,Strategy,2/9/19,B
+B2,Outright,short,INR,71.0225,5,,50000,,Strategy,2/9/19,B
+B2,Outright,long,INR,71.07,10,,50000,,Strategy,3/9/19,B
+B1,Outright,long,IRN,70.98,15,,50000,,Strategy,4/9/19,B
+B1,Outright,long,IRN,69.32,10,,50000,,Strategy,5/9/19,B
+B1,Outright,long,KWN,1178.56,10,,50000,,Strategy,9/9/19,B
+B1,Outright,short,IRN,69.89,10,,50000,,Strategy,9/9/19,B
+B1,Outright,long,KWN,1181.72,15,,50000,,Strategy,10/9/19,B
+B1,Outright,short,KWN,1180.45,5,,50000,,Strategy,13/9/19,B
+B1,Outright,short,KWN,1181.72,5,,50000,,Strategy,10/9/19,B
+B1,Outright,short,IRN,71.27,5,,50000,,Strategy,11/9/19,B

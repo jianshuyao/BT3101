@@ -7,7 +7,7 @@ from fractions import Fraction
 
 
 #bloomberg sample data for 5 currencies 
-df = pd.read_excel('Dummy Dataset.xlsx')
+df = pd.read_excel('Bloomberg Data.xlsx')
 df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 df.set_index('Date', inplace=True)
 df = df.sort_index()
@@ -23,7 +23,7 @@ def trans_preprocessing(trader_data):
 
 
 #transaction data for one trade A
-transaction_A = pd.read_csv('A_transaction.csv')
+transaction_A = pd.read_csv('transaction.csv')
 trans_preprocessing(transaction_A)
 transaction_A
 
@@ -203,7 +203,23 @@ def pnl_trader(start,end,trader_df,df):
                 result = pd.concat([result, temp]).groupby('Date', as_index=True).sum()
             except ValueError:
                 return None
-    return result    
+    return result  
+
+def pnl_team(start,end,team_df,df):
+    traders = team_df['User'].unique()
+    
+    for i in range(len(traders)):
+        trader = traders[i]
+        if i ==0:
+            trader_df = team_df.groupby('User').get_group(trader)
+            result = pnl_trader(start,end,trader_df,df)
+        else:
+            temp = pnl_trader(start,end,trader_df,df)
+            try:
+                result = pd.concat([result, temp]).groupby('Date', as_index=True).sum()
+            except ValueError:
+                return None
+        return result  
 
                
 

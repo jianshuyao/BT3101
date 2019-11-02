@@ -1,0 +1,14 @@
+Portfolio,Type of Trade,Direction,Product,Price,Size/Notional,Tenor,Amount to Risk,Timeframe,Strategy Type,Timestamp,User
+A2,Outright,long,TWD,30.98,6,,50000,,Strategy,28/8/19,A
+A2,Outright,long,TWD,31.01,5,,50000,,Strategy,29/8/19,A
+A2,Outright,long,TWD,30.43,10,,50000,,Strategy,30/8/19,A
+A2,Outright,long,NTN,30.45,12,,50000,,Strategy,30/8/19,A
+A2,Outright,short,TWD,30.23,7,,50000,,Strategy,2/9/19,A
+A2,Outright,short,NTN,31.2,2,,50000,,Strategy,2/9/19,A
+A2,Outright,short,NTN,31.45,3,,50000,,Strategy,3/9/19,A
+A1,Outright,long,IRN,70,15,,50000,,Strategy,4/9/19,A
+A1,Outright,long,IRN,69.32,10,,50000,,Strategy,5/9/19,A
+A1,Outright,long,KWN,1178.56,10,,50000,,Strategy,9/9/19,A
+A1,Outright,short,IRN,69.89,10,,50000,,Strategy,9/9/19,A
+A1,Outright,long,KWN,1181.72,15,,50000,,Strategy,10/9/19,A
+A1,Outright,short,KWN,1180.45,5,,50000,,Strategy,13/9/19,A

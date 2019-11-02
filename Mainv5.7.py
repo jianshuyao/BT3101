@@ -138,6 +138,63 @@ def tab3_build_ratio(ratio_list):
         result.append(tab3_ratio_box(ratio))
     return result
 
+def tab4_build_idv_graph(start, end,trade_table_store):
+    trade_table = pd.DataFrame.from_dict(trade_table_store)
+    temp_df = trade_table
+    trans_preprocessing(temp_df)
+
+    users = list(temp_df['User'])
+    users = np.unique(users)
+
+            
+    if start: temp_df = temp_df[temp_df.Timestamp>=start]
+    if end: temp_df = temp_df[temp_df.Timestamp<=end]
+
+    # temp_df = temp_df.reset_index(level=['Timestamp'])
+    temp_df = temp_df.sort_values('Timestamp')
+
+    fig = {'data': [go.Scatter(x=temp_df[temp_df['User'] == user]["Timestamp"], 
+                               y=temp_df[temp_df['User'] == user]["Size/Notional"],
+                               mode = 'lines+markers',
+                               name = user) for user in users],
+            'layout':{"paper_bgcolor": "rgba(0,0,0,0)",
+                      "plot_bgcolor": "rgba(0,0,0,0)",
+                      "font": {"color": "lightgrey"},
+                      "margin": {'t': 30},
+                      "xaxis": dict(title= 'Time'),
+                      "yaxis": dict(title= 'PnL')}
+        }
+    return fig
+
+def tab4_build_agg_graph(start, end, trade_table_store):
+    trade_table = pd.DataFrame.from_dict(trade_table_store)
+    temp_df = trade_table
+    trans_preprocessing(temp_df)
+
+    users = list(temp_df['User'])
+    users = np.unique(users)
+
+    if start: temp_df = temp_df[temp_df.Timestamp>=start]       
+    if end: temp_df = temp_df[temp_df.Timestamp<=end]
+
+    temp_df = temp_df.groupby('Timestamp')['Size/Notional'].sum().to_frame().reset_index()
+
+    fig = {'data': [go.Scatter(x=temp_df["Timestamp"], 
+                               y=temp_df["Size/Notional"],
+                               # mode = 'lines+markers',
+                               fill = 'tozeroy',
+                               )],
+
+            'layout':{"paper_bgcolor": "rgba(0,0,0,0)",
+                      "plot_bgcolor": "rgba(0,0,0,0)",
+                      "font": {"color": "lightgrey"},
+                      "margin": {'t': 30},
+                      "xaxis": dict(title= 'Time'),
+                      "yaxis": dict(title= 'PnL')}
+            }
+            
+    return fig
+
 ##### Build top banner ######################################
 def build_banner():
     return html.Div(
@@ -175,62 +232,60 @@ def build_banner():
 def init_tab_1():
     return dcc.Tab(label = 'Individual Summary', className = 'custom-tab', selected_className="custom-tab--selected", 
                    children = [           
-            html.Div([                    
-                html.Div([
-                       # date selection
-                       html.Div([
-                           html.Div([html.H6('Select Date:')], style = {'margin-left': 10, 'margin-right': 30}),
-                           dcc.DatePickerRange(
-                                id = 'tab1_date_range',
-                                display_format='Y-M-D',
-                                end_date = dt.now().date()
-                           )],
-                           className = 'row',
-                           style = {'display': 'flex', 'flex-direction': 'row', 'align-items': 'center', "margin-top": 30}
-                       ),
-                    
-                    # summary of total portfolios and PnL 
-                       html.Div([
+                        html.Div([                    
+                            html.Div([
+                                   # date selection
+                                   html.Div([
+                                       html.Div([html.H6('Select Date:')], style = {'margin-right': 30}),
+                                       dcc.DatePickerRange(
+                                            id = 'tab1_date_range',
+                                            display_format='Y-M-D',
+                                            end_date = dt.now().date()
+                                       )],
+                                       className = 'row',
+                                       style = {'display': 'flex', 'flex-direction': 'row',
+                                                'margin-right':50}
+                                   ),
+                                
+                                # summary of total portfolios and PnL 
+                                   html.Div([
+                                        
+                                        html.Div([
+                                            html.Div(
+                                                    [html.H6(id = "tab1_total_pnl"), html.P('Total PnL')],
+                                                    className = "mini_container",
+                                                    style = {'margin-right':50})]),
+                                            
+                                        html.Div([
+                                            html.Div(
+                                                    [html.H6(id = "tab1_total_portfolio"), html.P('Total Portfolios')],
+                                                    className = "mini_container",
+                                                    style = {'margin-right':50})]),
+                                    ],
+                                    style = {'display': 'flex', 'flex-direction': 'row'}
+                                  ),
+              
+                            ], 
+                            style = {'margin':'auto', 'margin-top': 30, 'margin-bottom': 30, 'width': '90%',
+                                     'display': 'flex', 'flex-direction': 'row', 'justify-content': 'flex-start'}),
                             
                             html.Div([
-                                html.Div(
-                                        [html.H6(id = "tab1_total_pnl"), html.P('Total PnL')],
-                                        className = "mini_container",
-                                        style = {'margin-right':10})],
-                                        className = 'six columns'),
-                                
-                            html.Div([
-                                html.Div(
-                                        [html.H6(id = "tab1_total_portfolio"), html.P('Total Portfolios')],
-                                        className = "mini_container")],
-                                        className = 'six columns'),
+                                    
+                                    html.Div(
+                                        className = "row chart-top-bar",
+                                        children = [
+                                            html.Div(
+                                                className="inline-block chart-title",
+                                                children = "PnL Performance",
+                                            )
+                                    ]),
+                                    
+                                    dcc.Graph(id = 'tab1_pnl_performance')
+                            ],
+                            style = {'padding': 10, 'margin': 'auto','width': '80%'}),
                         ],
-                        className = 'twelve columns',
-                        style = {"margin-top": 30}
-                      ),
-  
-                ], 
-                className="four columns", style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30}),
-                
-                html.Div([
-                        
-                        html.Div(
-                            className = "row chart-top-bar",
-                            children = [
-                                html.Div(
-                                    className="inline-block chart-title",
-                                    children = "PnL Performance",
-                                )
-                        ]),
-                        
-                        dcc.Graph(id = 'tab1_pnl_performance')
-                ], 
-                className = 'eight columns',
-                style = {'padding': 10, 'width': 800}),
-            ],
-            className = 'twelve columns',
-            style = {'margin-left': 30, 'margin-right': 30, 'margin-top': 20, 'margin-bottom': 30})    
-        ])
+                        style = {'margin-left': 30, 'margin-right': 30, 'margin-top': 20, 'margin-bottom': 30})    
+                ])
 
 def init_tab_2():
     return dcc.Tab(label='Add Transaction', className = 'custom-tab', selected_className="custom-tab--selected", children = [ 
@@ -240,56 +295,63 @@ def init_tab_2():
                     html.Div([
                         html.Div(
                                 dcc.Input(id = 'user', className = "text_input", type = 'text', placeholder = 'User'),
-                                className = "three columns"),
+                                style = {'margin-right': 60}),
                         html.Div(
                                 dcc.Input(id = 'portfolio', className = "text_input", type = 'text', placeholder = 'Portfolio'),
-                                className = "three columns"),
+                                style = {'margin-right': 60}),
                         html.Div(
                                 dcc.DatePickerSingle(
                                     id = 'timestamp',
                                     placeholder = 'Date'),
-                                className = "three columns", style = {'width': 270}),
+                                style = {'width': 200, 'margin-right': 60}),
                         html.Div(
                                 dcc.Input(id = 'type', type = 'text', className = "text_input", placeholder = 'Type of Trade'),
-                                className = "three columns"),        
+                                style = {'margin-right': 60}),        
                         
-                    ], className = "twelve columns", style = {'padding': 10}),
+                    ], 
+                    style = {'margin-top': 10, 'margin-bottom': 30,
+                             'display': 'flex', 'justify-content': 'flex-start'}),
                                 
                     html.Div([
                         html.Div(
                                 dcc.Input(id = 'product', type = 'text', className = "text_input", placeholder = 'Product'),
-                                className = "three columns"),
+                                style = {'margin-right': 60}),
                         html.Div(
                                 dcc.Dropdown(id='direction',
                                              options=[{'label': 'Long', 'value': 'Long'},
                                                       {'label': 'Short', 'value': 'Short'}],
                                              placeholder = 'Direction'),
-                                className = "three columns", style = {'width': 200, 'margin-right': 65}),
+                                style = {'width': 200, 'margin-right': 60}),
                         html.Div(
                                 dcc.Input(id = 'price', type = 'number',  className = "text_input", placeholder = 'Price'),
-                                className = "three columns", style = {'margin-right': 5}),
+                                style = {'margin-right': 60}),
                         html.Div(
                                 dcc.Input(id = 'size', type = 'number',  className = "text_input", placeholder = 'Size/Notional'),
-                                className = "three columns"),
-                    ], className = "twelve columns", style = {'padding': 10}),
+                                style = {'margin-right': 60}),
+                    ], 
+                    style = {'margin-top': 10, 'margin-bottom': 30,
+                             'display': 'flex', 'justify-content': 'flex-start'}),
                                 
                     html.Div([    
                         html.Div(
                                 dcc.Input(id = 'tenor', type = 'text',  className = "text_input", placeholder = 'Tenor'),
-                                className = "three columns"),
+                                style = {'margin-right': 60}),
                         html.Div(
                                 dcc.Input(id = 'risk', type = 'number',  className = "text_input", placeholder = 'Amount to Risk'),
-                                className = "three columns"),
+                                style = {'margin-right': 60}),
                         html.Div(
                                 dcc.Input(id = 'timeframe', type = 'text',  className = "text_input", placeholder = 'Timeframe'),
-                                className = "three columns")
-                    ], className = "twelve columns", style = {'padding': 10}),
+                                style = {'margin-right': 60})
+                    ], 
+                    style = {'margin-top': 10, 'margin-bottom': 30,
+                             'display': 'flex', 'justify-content': 'flex-start'}),
                         
                     html.Div([
                     dcc.Input(id = 'strategy', type = 'text',  placeholder = 'Strategy Type', style = {'width': 800, 'height': 100})
-                    ], className = "twelve columns", style = {'padding': 10}),
+                    ], style = {'margin-top': 10, 'margin-bottom': 30,
+                             'display': 'flex', 'justify-content': 'flex-start'}),
                                 
-                ], style = {'margin-left': 120}),
+                ], style = {'margin': 'auto', 'width': '85%'}),
                     
                             
                 html.Div([
@@ -306,7 +368,7 @@ def init_tab_2():
 #                        ),
 #                        id = 'reset',
 #                        message = 'Are you sure to clear all inputs?'),
-                ],style = {'padding': 10,'margin-right': 200, 'display': 'flex', 'flex-direction': 'row-reverse'}),
+                ],style = {'padding': 10, 'display': 'flex', 'flex-direction': 'row-reverse','width': '90%',}),
                                 
                 html.Div(
                     dcc.ConfirmDialog(id = 'confirm', message = 'There are blank fields!')
@@ -314,28 +376,29 @@ def init_tab_2():
                 
                 html.Div(id = 'tab2_table',
                          children = tab2_build_table(trade_table, user_list[0]), 
-                         style = {'height': 400,'margin-left': 50, 'width': 1200, 'margin-top': 15})  
-            ], style = {'margin-left': 30, 'margin-top': 20, 'margin-bottom': 30})
+                         style = {'height': 400,'margin': 'auto', 'width': '90%', 'margin-top': 15})  
+            ], style = {'margin-left': 30, 'margin-right': 30, 'margin-top': 20, 'margin-bottom': 30 })
         ])
 
 def init_tab_3():
     selector_date = html.Div([
         html.Div([
             html.H6('Select Date:')], 
-            style = {'margin-left': 10, 'margin-right': 20}),
+            style = {'margin-left': 10, 'margin-right': 30}),
         dcc.DatePickerRange(
             id = 'tab3_date_range',
             display_format='Y-M-D',
             end_date = dt.now().date()
         )],
         className = 'row',
-        style = {'display': 'flex', 'flex-direction': 'row', 'align-items': 'center', "margin-top": 30}
+        style = {'margin':'auto','margin-bottom': 30, 'width': '90%',
+                 'display': 'flex', 'flex-direction': 'row', "margin-top": 30}
     )
     
     selector_portfolio = html.Div([
-        html.H6('Select Portfolio'),
+#        html.H6('Select Portfolio'),
         dcc.Dropdown(id = 'tab3 portfolio')],
-        style = {'padding':8})
+        style = {'width':300})
     
     ratio_container = html.Div(
         id="info-container",
@@ -343,17 +406,31 @@ def init_tab_3():
         className="four columns",
         style = {'padding': 10})
     
-    selector_section = html.Div([
-        selector_date, selector_portfolio], 
-        className = "four columns")
+#    selector_section = html.Div([
+#        selector_date, selector_portfolio], 
+#        className = "four columns")
     
     
+#    pnl_header = html.Div(
+#        className = "row chart-top-bar",
+#        children = [
+#            html.Div(
+#                className="inline-block chart-title",
+#                children = "PnL Performance")])
+                
     pnl_header = html.Div(
-        className = "row chart-top-bar",
-        children = [
-            html.Div(
-                className="inline-block chart-title",
-                children = "PnL Performance")])
+                    className = "row chart-top-bar",
+                    children = [
+                            html.Div(
+                                className="inline-block chart-title",
+                                children = "PnL Performance",
+                            ),
+                                    
+                            html.Div(
+                                className = "graph-top-right inline-block",
+                                children = [selector_portfolio],
+                                style = {'width': 300}),
+                    ])
     
     pnl_graph = dcc.Graph(
         id='tab3 daily pnl', 
@@ -365,47 +442,45 @@ def init_tab_3():
     
     pnl_section = html.Div([
         pnl_header,pnl_graph], 
-        className = "eight columns",
-        style = {'padding': 10, 'width': 800})
+        style = {'margin': 'auto', 'width': '80%'})
     
     table = html.Div(
         id='tab3_table',
         children = tab3_build_table(trade_table,user_list[0]),
         className = 'eight columns',
-        style = {'height': 400, 'padding': 10, 'width': 800})
+        style = {'height': 400, 'padding': 10})
     
     return dcc.Tab(label='Individual Analysis', className = 'custom-tab', selected_className="custom-tab--selected", 
                    children = [
-                       html.Div([  
-                           html.Div([selector_section, pnl_section], 
-                                    className = "twelve columns",
-                                    style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30}),  
+                       html.Div([ 
+                            html.Div([selector_date]),  
+                           
+                           html.Div([pnl_section], 
+                                    style = {'margin-top': 10, 'margin-bottom': 30}),  
                            
                            html.Div([ratio_container, table],
                                     className = "twelve columns",
-                                    style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30})
+                                    style = {'margin': 'auto', 'margin-top': 10, 'margin-bottom': 30, 'width': '90%'})
                        ],
                            style = {'margin-left': 30, 'margin-right': 30, 'margin-top': 20, 'margin-bottom': 30}
                        )
-                   ]
-                  )
+                  ]
+            )
 
 def init_tab_4():
     return dcc.Tab(label='Team Summary', className = 'custom-tab', selected_className="custom-tab--selected", children = [
            html.Div([ 
-                #html.H3('Team Summary'),
                 
                 ### select date range
                 html.Div([
-                           html.Div([html.H6('Select Date:')], style = {'margin-left': 10, 'margin-right': 30}),
+                           html.Div([html.H6('Select Date:')], style = {'margin-right': 30}),
                            dcc.DatePickerRange(
                                 id = 'tab4_date_range',
                                 display_format='Y-M-D',
                                 end_date = dt.now().date()
                            )],
-                           className = 'row',
-                           style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30,
-                                   'display': 'flex', 'flex-direction': 'row', 'align-items': 'center', "margin-top": 30}
+                           style = {'margin':'auto', 'margin-bottom': 30, 'width': '90%',
+                                   'display': 'flex', 'flex-direction': 'row', "margin-top": 30}
                 ),
                 
                 ###text boxes to display ratio for selected porfolio
@@ -415,24 +490,23 @@ def init_tab_4():
                             html.H6(id="total_pnl_text_tab4"), html.P("Total PnL")],
                             id="total_pnl_tab4",
                             className = "mini_container"),
-                        ], className = "one-third column"),
+                    ], style = {'margin-right': 50}),
                     
                     html.Div([
                         html.Div([
                             html.H6(id="no_of_porfolios_text_tab4"), html.P("Number of Portfolios")],
                             id="no_of_porfolios_tab4",
                             className = "mini_container"),
-                    ], className = "one-third column"),
+                    ],style = {'margin-right': 50}),
                                 
                     html.Div([            
                         html.Div(
                             [html.H6(id="last_week_trades_text_tab4"), html.P("Last Week Trades")],
                             id="last_week_trades_tab4",
                             className = "mini_container"),
-                    ], className = "one-third column")], 
+                    ],style = {'margin-right': 50})], 
                     id="info-container_1_tab4",
-                    className="twelve columns",
-                    style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30, 
+                    style = {'margin-top': 10, 'margin-bottom': 30,
                              'display': 'flex', 'justify-content': 'center'}),
 
                 html.Div([
@@ -441,14 +515,14 @@ def init_tab_4():
                             [html.H6(id="sorting_ratio_text_tab4"), html.P("Sortino Ratio")],
                             id="sorting_ratio_tab4",
                             className = "mini_container"),
-                    ], className = "one-third column"),
+                    ], style = {'margin-right': 50}),
     
                     html.Div([
                         html.Div(
                             [html.H6(id="sharpe_ratio_text_tab4"), html.P("Sharpe Ratio")],
                             id="sharpe_ratio_tab4",
                             className = "mini_container"),
-                    ], className = "one-third column"),
+                    ], style = {'margin-right': 50}),
                     
     
                     html.Div([
@@ -456,34 +530,42 @@ def init_tab_4():
                             [html.H6(id="hit_ratio_text_tab4"), html.P("Hit Ratio")],
                             id="hit_ratio_tab4",
                             className = "mini_container"),
-                    ], className = "one-third column")],
+                    ], style = {'margin-right': 50})],
                     id="info-container_tab4",
-                    className="twelve columns",
-                    style = {'margin-left': 30, 'margin-top': 10, 'margin-bottom': 30, 
-                             'display': 'flex', 'justify-content': 'center'}),
+                    style = {'margin-top': 10, 'margin-bottom': 30, 'display': 'flex', 'justify-content': 'center'}),
+            
                 
-                html.Div(
-                    className = "six columns",
-                    children = [
-                                html.H6("Team PnL View (Please select a way of viewing)"),
-                                dcc.Dropdown(id  = "tab 4 switch view",
+                html.Div([
+                        html.Div(
+                            className = "row chart-top-bar",
+                            children = [
+                                html.Div(
+                                    className="inline-block chart-title",
+                                    children = "Team PnL Performance",
+                                ),
+                                        
+                                html.Div(
+                                    className = "graph-top-right inline-block",
+                                    children = [
+                                        html.Div([
+                                            #html.H6('Select Timeframe'),
+                                            dcc.Dropdown(id  = "tab 4 switch view",
                                              options=[
-                                                {'label': 'Break Down By Individuals', 'value': 'Break Down By Individuals'},
-                                                {'label': 'Team aggregated', 'value': 'Team aggregated'}
-                                                ]
-                                    )
-                        ]
-                    ),
-
-                html.Div(
-                    className = "twelve columns", 
-                    children = [
+                                                {'label': 'Individuals', 'value': 'Individuals'},
+                                                {'label': 'Aggregated', 'value': 'Aggregated'}],
+                                             value = 'Aggregated'
+                                        )],
+                                        style = {'width': 300}),
+                                    ])
+                        ]),
+                            
                         dcc.Graph(id='tab4 graphs'),
-                    ])  
-              ],
-              style = {'margin-top': 10, 'margin-bottom': 30})
+                    ], 
+                    style = {'margin':'auto', 'width': '80%'}) 
 
             ], style = {'margin-left': 30, 'margin-right': 30, 'margin-top': 20, 'margin-bottom': 30})
+        ])
+                                            
 
 # Dashboard layout
 app.layout = html.Div(
@@ -537,8 +619,8 @@ def update_datepicker(user, data_dict):
                Input('tab1_date_range', 'start_date'),
                Input('tab1_date_range', 'end_date')])
 def update_tab1_pnl(user, start_date, end_date):
-    start_date = datetime.strptime(start_date, "%Y-%m-%d").strftime('%d/%m/%Y')
-    end_date = datetime.strptime(end_date, "%Y-%m-%d").strftime('%d/%m/%Y')
+    start_date = dt.strptime(start_date, "%Y-%m-%d").strftime('%d/%m/%Y')
+    end_date = dt.strptime(end_date, "%Y-%m-%d").strftime('%d/%m/%Y')
     
     transaction = trade_table[trade_table['User'] == user]
     portfolios = list(transaction['Portfolio'])
@@ -704,72 +786,13 @@ def update_tab3_daily(start, end, data_dict, user, portfolio):
               [Input('tab4_date_range', 'start_date'),
                Input('tab4_date_range', 'end_date'),
                Input('tab 4 switch view','value'),
-              Input('trade_table_store', 'data')])
+               Input('trade_table_store', 'data')])
 def update_tab4_graphs(start,end,view,trade_table_store):
-    if view == 'Break Down By Individuals':
-        def update_tab4_team_view(start, end,trade_table_store):
-            trade_table = pd.DataFrame.from_dict(trade_table_store)
-            temp_df = trade_table
-            trans_preprocessing(temp_df)
-
-            users = list(temp_df['User'])
-            users = np.unique(users)
-
-            
-            if start: temp_df = temp_df[temp_df.Timestamp>=start]
-            if end: temp_df = temp_df[temp_df.Timestamp<=end]
-
-            # temp_df = temp_df.reset_index(level=['Timestamp'])
-            temp_df = temp_df.sort_values('Timestamp')
-
-            fig = {'data': [go.Scatter(x=temp_df[temp_df['User'] == user]["Timestamp"], 
-                                       y=temp_df[temp_df['User'] == user]["Size/Notional"],
-                                       mode = 'lines+markers',
-                                       name = user) for user in users],
-                   'layout':{"paper_bgcolor": "rgba(0,0,0,0)",
-                               "plot_bgcolor": "rgba(0,0,0,0)",
-                               "font": {"color": "lightgrey"},
-                               "margin": {'t': 30},
-                               "xaxis": dict(title= 'Time'),
-                               "yaxis": dict(title= 'PnL')}
-                  }
-
-
-            return fig
-        fig = update_tab4_team_view(start, end,trade_table_store)
+    if view == 'Individuals':
+        fig = tab4_build_idv_graph(start, end,trade_table_store)
         return fig
     else:
-        def update_tab4_aggregated_view(start, end, trade_table_store):
-            trade_table = pd.DataFrame.from_dict(trade_table_store)
-            temp_df = trade_table
-            trans_preprocessing(temp_df)
-
-            users = list(temp_df['User'])
-            users = np.unique(users)
-
-            
-            if start: temp_df = temp_df[temp_df.Timestamp>=start]
-            if end: temp_df = temp_df[temp_df.Timestamp<=end]
-
-
-            temp_df = temp_df.groupby('Timestamp')['Size/Notional'].sum().to_frame().reset_index()
-
-            fig = {'data': [go.Scatter(x=temp_df["Timestamp"], 
-                                       y=temp_df["Size/Notional"],
-                                       # mode = 'lines+markers',
-                                       fill = 'tozeroy',
-                                       )],
-
-                   'layout':{"paper_bgcolor": "rgba(0,0,0,0)",
-                               "plot_bgcolor": "rgba(0,0,0,0)",
-                               "font": {"color": "lightgrey"},
-                               "margin": {'t': 30},
-                               "xaxis": dict(title= 'Time'),
-                               "yaxis": dict(title= 'PnL')}
-                  }
-            
-            return fig
-        fig = update_tab4_aggregated_view(start, end, trade_table_store)
+        fig = tab4_build_agg_graph(start, end, trade_table_store)
         return fig
 
 
