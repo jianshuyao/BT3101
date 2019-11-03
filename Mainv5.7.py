@@ -146,15 +146,15 @@ def tab4_build_idv_graph(start, end,trade_table_store):
     users = list(temp_df['User'])
     users = np.unique(users)
 
-            
-    if start: temp_df = temp_df[temp_df.Timestamp>=start]
-    if end: temp_df = temp_df[temp_df.Timestamp<=end]
+    pnl_traders = {}
+    for user in users:
+        trader_df = temp_df.groupby('User').get_group(user)
+        pnl_temp = pnl_trader(start,end,trader_df,df)
+        pnl_temp.reset_index(level=0,inplace=True)
+        pnl_traders[user] = pnl_temp
 
-    # temp_df = temp_df.reset_index(level=['Timestamp'])
-    temp_df = temp_df.sort_values('Timestamp')
-
-    fig = {'data': [go.Scatter(x=temp_df[temp_df['User'] == user]["Timestamp"], 
-                               y=temp_df[temp_df['User'] == user]["Size/Notional"],
+    fig = {'data': [go.Scatter(x=pnl_traders[user]['Date'], 
+                               y=pnl_traders[user]['PnL'],
                                mode = 'lines+markers',
                                name = user) for user in users],
             'layout':{"paper_bgcolor": "rgba(0,0,0,0)",
@@ -173,9 +173,6 @@ def tab4_build_agg_graph(start, end, trade_table_store):
 
     users = list(temp_df['User'])
     users = np.unique(users)
-
-    start = datetime.strptime(start, "%Y-%m-%d").strftime('%d/%m/%Y')
-    end = datetime.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
 
     pnl = pnl_team(start,end,temp_df,df)
     pnl.reset_index(level=0,inplace=True)
@@ -516,8 +513,8 @@ def init_tab_4():
                 html.Div([
                     html.Div([
                         html.Div(
-                            [html.H6(id="sorting_ratio_text_tab4"), html.P("Sortino Ratio")],
-                            id="sorting_ratio_tab4",
+                            [html.H6(id="sortino_ratio_text_tab4"), html.P("Sortino Ratio")],
+                            id="sortino_ratio_tab4",
                             className = "mini_container"),
                     ], style = {'margin-right': 50}),
     
@@ -784,19 +781,77 @@ def update_tab3_daily(start, end, data_dict, user, portfolio):
                       },
             'data': [go.Scatter(x = X, y = Y, mode = 'lines+markers')]
            }  
+
+###tab3 update graph
+@app.callback([Output('sharpe_ratio_text', 'children'),
+               Output('hit_ratio_text', 'children'),
+               Output('sortino_ratio_text', 'children')],
+              [Input('tab3_date_range', 'start_date'),
+               Input('tab3_date_range', 'end_date'),
+               Input('trade_table_store', 'data'),
+               Input('user_login', 'value')])
+def update_tab3_ratio_list(start, end, data_dict, user):
+    trade_table = pd.DataFrame.from_dict(data_dict)
+    temp_df = trade_table.loc[(trade_table['User'] == user)]
+    trans_preprocessing(temp_df)
+    
+    start = datetime.strptime(start, "%Y-%m-%d").strftime('%d/%m/%Y')
+    end = datetime.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
+
+    pnl = pnl_trader(start, end, temp_df, df)  
+
+    sharpe_ratio = 0
+    hit_ratio = 1
+    sortino_ratio = 2
+
+    sharpe_ratio = cal_sharpe_ratio(pnl)
+    hit_ratio = cal_hit_ratio(pnl)
+    sortino_ratio = cal_sortino_ratio(pnl)
+    
+    return sharpe_ratio, hit_ratio, sortino_ratio
+
+
+
 # tab 4 graphs
-@app.callback(Output('tab4 graphs', 'figure'),
+@app.callback([Output('tab4 graphs', 'figure'),
+               Output('total_pnl_text_tab4', 'children'),
+               Output('no_of_porfolios_text_tab4', 'children'),
+               Output('last_week_trades_text_tab4', 'children'),
+               Output('sortino_ratio_text_tab4', 'children'),
+               Output('sharpe_ratio_text_tab4', 'children'),
+               Output('hit_ratio_text_tab4', 'children')],
               [Input('tab4_date_range', 'start_date'),
                Input('tab4_date_range', 'end_date'),
                Input('tab 4 switch view','value'),
                Input('trade_table_store', 'data')])
 def update_tab4_graphs(start,end,view,trade_table_store):
+    total_pnl = 0
+    number_of_portfolios = 1
+    last_week_trades = 2
+    sortino_ratio = 3
+    sharpe_ratio = 4
+    hit_ratio = 5
+
+    start = datetime.strptime(start, "%Y-%m-%d").strftime('%d/%m/%Y')
+    end = datetime.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
+
+    trade_table = pd.DataFrame.from_dict(trade_table_store)
+    temp_df = trade_table
+    trans_preprocessing(temp_df)
+    pnl_df = pnl_team(start, end, temp_df, df)
+
+
+    sharpe_ratio = cal_sharpe_ratio(pnl_df)
+    #sortino_ratio = cal_sortino_ratio(pnl_df)
+    #hit_ratio = cal_hit_ratio(pnl_df)
+
+
     if view == 'Individuals':
         fig = tab4_build_idv_graph(start, end,trade_table_store)
-        return fig
+        return fig, total_pnl, number_of_portfolios, last_week_trades, sortino_ratio, sharpe_ratio, hit_ratio
     else:
         fig = tab4_build_agg_graph(start, end, trade_table_store)
-        return fig
+        return fig, total_pnl, number_of_portfolios, last_week_trades, sortino_ratio, sharpe_ratio, hit_ratio
 
 
 if __name__ == '__main__':

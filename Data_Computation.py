@@ -223,11 +223,13 @@ def pnl_team(start,end,team_df,df):
 
                
 
+def total_pnl(start,end,team_df,df):
+    pass
 
 # In[10]:
 
 from math import sqrt
-def sharpe_ratio(pnl_df):
+def cal_sharpe_ratio(pnl_df):
     mu = pnl_df.PnL.mean()
     sd = pnl_df.PnL.std()
     try:
@@ -235,30 +237,30 @@ def sharpe_ratio(pnl_df):
     except ZeroDivisionError:
         return 0
     
-    return result
+    return round(result,2)
 
 
 # In[11]:
 
-def sortino_ratio(pnl_df):
+def cal_sortino_ratio(pnl_df):
     mu = pnl_df.PnL.mean()
     sd = pnl_df.loc[(pnl_df['PnL'] <= 0)].PnL.std()
     try:
         result = mu/sd
     except ZeroDivisionError:
         return 0
-    return result
+    return round(result,2)
                      
 
 
 # In[12]:
 
-def hit_ratio(pnl_df):
+def cal_hit_ratio(pnl_df):
     winning = pnl_df.loc[(pnl_df['PnL'] > 0)].shape[0]
-    losing = pnl_df.loc[(pnl_df['PnL'] <= 0)].shape[0]
+    total = pnl_df.shape[0]
     try:
-        result = winning/losing
-        return result
+        result = winning/total
+        return round(result,2)
     except ZeroDivisionError:
         print ("No losing trade")
         return winning
