@@ -585,7 +585,7 @@ app.layout = html.Div(
         dcc.Store(id='trade_table_store', data = trade_table.to_dict('records')),
         dcc.Interval(
             id='interval-component',
-            interval=5*1000, # every 5 seconds
+            interval=20*1000, # every 20 seconds
             n_intervals=50
         )
     ]
@@ -767,7 +767,6 @@ def update_tab3_daily(start, end, data_dict, user, portfolio):
     end = datetime.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
 
     pnl = pnl_portfolio(start, end, temp_df, portfolio, df)  
-    #pnl = pnl_portfolio(start, end, transaction_A, portfolio, df)
     pnl.reset_index(level=0, inplace=True)
     X = pnl['Date']
     Y = pnl['PnL']
@@ -842,8 +841,10 @@ def update_tab4_graphs(start,end,view,trade_table_store):
 
 
     sharpe_ratio = cal_sharpe_ratio(pnl_df)
-    #sortino_ratio = cal_sortino_ratio(pnl_df)
-    #hit_ratio = cal_hit_ratio(pnl_df)
+    sortino_ratio = cal_sortino_ratio(pnl_df)
+    hit_ratio = cal_hit_ratio(pnl_df)
+    number_of_portfolios = len(temp_df.Portfolio.unique())
+    total_pnl = round(pnl_df.PnL.sum(),2)
 
 
     if view == 'Individuals':
