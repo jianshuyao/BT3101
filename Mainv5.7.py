@@ -648,16 +648,30 @@ def update_tab1_pnl(user, start_date, end_date):
                     ]}
     return figure, round(pnl['PnL'].sum(),2), portfolios.size
 
+# update table user options
+@app.callback(
+   [Output('user_login', 'options'),
+    Output('user_login', 'value')],
+   [Input('trade_table_store', 'data')],
+   [State('user_login', 'value')])
+def update_userlist(data_dict, login):
+    trade_table = pd.DataFrame.from_dict(data_dict)
+    user_list = sorted(trade_table.User.unique())
+    user_list.sort()
+    if login == None:
+        login = user_list[0]
+    options = [{'label': user, 'value': user}for user in user_list]
+    return options, login
+
+
 # tab 2 update table
 @app.callback(
     [Output('confirm', 'displayed'),
-     Output('tab2_trade_table', 'data'),
-     Output('user_login', 'options'),
-     Output('user_login', 'value')],
+     Output('tab2_trade_table', 'data')],
     [Input('add', 'submit_n_clicks'),
-     Input('tab2_trade_table', "sort_by")],
+     Input('tab2_trade_table', "sort_by"),
+     Input('user_login', 'value')],
     [State('trade_table_store', 'data'),
-     State('user_login', 'value'),
      State('portfolio', 'value'),
      State('product', 'value'),
      State('type', 'value'),
@@ -670,15 +684,12 @@ def update_tab1_pnl(user, start_date, end_date):
      State('strategy', 'value'),
      State('timestamp', 'date'),
      State('user', 'value')])
-def update_table(submit_n_clicks, sort_by, data_dict,
-                 login, portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user):
+def update_table(submit_n_clicks, sort_by, login, data_dict,
+                 portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user):
     
     trade_table = pd.DataFrame.from_dict(data_dict)
     user_list = sorted(trade_table.User.unique())
-    if (login == None):
-        login = user_list[0]
     trade_user = trade_table[trade_table.User == login]
-    options = [{'label': user, 'value': user}for user in user_list]
     
     if len(sort_by):
         trade_df = trade_user.sort_values(
@@ -691,7 +702,7 @@ def update_table(submit_n_clicks, sort_by, data_dict,
         inputs = [portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user]
         for input in inputs:
             if input == None: 
-                return True, trade_df.to_dict('records'), options, login
+                return True, trade_df.to_dict('records')
             
         index = len(trade_table)
         trade_table.loc[index, 'Portfolio'] = portfolio
@@ -713,8 +724,8 @@ def update_table(submit_n_clicks, sort_by, data_dict,
             user_list.sort()
             options = [{'label': user, 'value': user}for user in user_list]
 #        save_file(trade_table, user)
-        return False, trade_user.to_dict('records'), options, user 
-    return False, trade_df.to_dict('records'), options, login
+        return False, trade_user.to_dict('records')
+    return False, trade_df.to_dict('records')
 
 
 
