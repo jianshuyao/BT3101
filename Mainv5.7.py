@@ -43,13 +43,17 @@ def load_data():
     user_list = sorted(trade_table.User.unique())
     return trade_table, portfolio_list, user_list
 
-def save_file(full_trade_table, user):
-    user_df = full_trade_table[full_trade_table.User==user]
-    user_df.to_csv(join(csv_path, user+'.csv'), index = False)
-
 trade_table, portfolio_list, user_list = load_data()
 ratio_list = ['Sharpe Ratio', 'Hit Ratio', 'Sortino Ratio']
 
+def read_bloomberg(file_name):
+    df = pd.read_excel(file_name)
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    df.set_index('Date', inplace=True)
+    df = df.sort_index()
+    return df
+
+df = read_bloomberg('Bloomberg Data.xlsx')
 
 ###### DATA Processing Functions ########################
 ### function for tab 2
@@ -587,6 +591,12 @@ app.layout = html.Div(
             id='interval-component',
             interval=20*1000, # every 20 seconds
             n_intervals=50
+        ),
+        
+        dcc.Store(id='bloomberg_store', data = df.to_dict('records')),
+        dcc.Interval(id='interval_bloomberg',
+                     interval=20*1000, # every 20 seconds
+                     n_intervals=50
         )
     ]
 )
@@ -599,6 +609,14 @@ def update_data_source(n):
     trade_table, portfolio_list, user_list = load_data()
     return trade_table.to_dict('records')
 
+
+@app.callback(Output('bloomberg_store', 'data'),
+              [Input('interval_bloomberg', 'n_intervals')])
+def update_bloomberg(n): 
+    df = read_bloomberg('Bloomberg Data.xlsx')
+    return df.to_dict('records')
+
+
 ### date picker range
 @app.callback([Output('tab1_date_range','start_date'),
                Output('tab3_date_range', 'start_date'),
@@ -606,6 +624,7 @@ def update_data_source(n):
               [Input('user_login', 'value'),
                Input('trade_table_store', 'data')])
 def update_datepicker(user, data_dict): 
+    df = read_bloomberg('Bloomberg Data.xlsx')
     trade_table = pd.DataFrame.from_dict(data_dict)
     trade_user = trade_table[trade_table['User'] == user]
     start_user = min(trade_user['Timestamp'])
