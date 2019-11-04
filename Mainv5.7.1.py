@@ -77,7 +77,7 @@ def tab2_build_table(trade_table, user):
     )
                 
 def get_last_3months():
-    last3month = date.today() - relativedelta.relativedelta(months=3)
+    last3month = date.today() - relativedelta.relativedelta(months=2)
     return dt(last3month.year, last3month.month, 1).date()
 
 ### function for tab 3
