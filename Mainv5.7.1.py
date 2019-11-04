@@ -73,7 +73,7 @@ def tab2_build_table(trade_table, user):
                 
 def get_last_3months():
     last3month = date.today() - relativedelta.relativedelta(months=3)
-    return (last3month.year, last3month.month, 1)
+    return dt(last3month.year, last3month.month, 1).date()
 
 ### function for tab 3
 ## function for table
@@ -626,6 +626,7 @@ def update_data_source(n):
                Input('tab1_date_range', 'start_date'),
                Input('tab1_date_range', 'end_date')])
 def update_tab1_pnl(user, start_date, end_date):
+    
     start_date = dt.strptime(start_date, "%Y-%m-%d").strftime('%d/%m/%Y')
     end_date = dt.strptime(end_date, "%Y-%m-%d").strftime('%d/%m/%Y')
     
