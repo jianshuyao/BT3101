@@ -598,16 +598,30 @@ app.layout = html.Div(
             id='interval-component',
             interval=20*1000, # every 20 seconds
             n_intervals=50
+        ),
+        
+        dcc.Store(id='bloomberg_store'),
+        dcc.Interval(
+            id='interval-bloomberg',
+            interval=20*1000, # every 20 seconds
+            n_intervals=50
         )
     ]
 )
 
 
 ### read file by interval
-@app.callback(Output('trade_table_store', 'data'),
+@app.callback(Output('bloomberg_store', 'data'),
               [Input('interval-component', 'n_intervals')])
 def update_data_source(n): 
     trade_table, portfolio_list, user_list = load_data()
+    return df.to_dict('records')
+
+### read file by interval
+@app.callback(Output('trade_table_store', 'data'),
+              [Input('interval-bloomberg', 'n_intervals')])
+def update_data_source(n): 
+    df = read_bloomberg('Bloomberg Data.xlsx')
     return trade_table.to_dict('records')
 
 ### date picker range
@@ -631,7 +645,7 @@ def update_data_source(n):
                Input('tab1_date_range', 'start_date'),
                Input('tab1_date_range', 'end_date')])
 def update_tab1_pnl(user, start_date, end_date):
-    
+    df = read_bloomberg('Bloomberg Data.xlsx')
     start_date = dt.strptime(start_date, "%Y-%m-%d").strftime('%d/%m/%Y')
     end_date = dt.strptime(end_date, "%Y-%m-%d").strftime('%d/%m/%Y')
     
