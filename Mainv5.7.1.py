@@ -18,6 +18,11 @@ from dateutil import relativedelta
 app = dash.Dash(__name__)
 csv_path = 'user_csv'
 
+df = pd.read_excel('Bloomberg Data.xlsx')
+df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+df.set_index('Date', inplace=True)
+df = df.sort_index()
+
 ###### DATA INTAKE ########################
 # Initialise trade table
 def read_data(user):
