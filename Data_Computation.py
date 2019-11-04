@@ -7,10 +7,10 @@ from fractions import Fraction
 
 
 #bloomberg sample data for 5 currencies 
-df = pd.read_excel('Bloomberg Data.xlsx')
-df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-df.set_index('Date', inplace=True)
-df = df.sort_index()
+#df = pd.read_excel('Bloomberg Data.xlsx')
+#df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+#df.set_index('Date', inplace=True)
+#df = df.sort_index()
 
 def trans_preprocessing(trader_data):
     #handle direction and notional of trade 
