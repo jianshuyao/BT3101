@@ -759,10 +759,9 @@ def add_trans(submit_n_clicks, login, data_dict, portfolio, product,
 #    else: trade_df = trade_user
         
     if submit_n_clicks:
-        inputs_dict = [portfolio, product, direction, price, size, timestamp, user]
-        inputs = inputs_dict.keys()
+        inputs = [portfolio, product, direction, price, size, timestamp, user]
         for input in inputs:
-            if inputs[input] == None: 
+            if input == None: 
                 return True
             
         index = len(trade_table)
