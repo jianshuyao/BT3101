@@ -23,9 +23,12 @@ def read_bloomberg(file_name):
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     df.set_index('Date', inplace=True)
     df = df.sort_index()
-    return df
+    currency = list(data.columns)
+    currency = [name for name in currency if name[0:7] != "Unnamed"]
+    currency = [name[:name.find(' ')] for name in currency]
+    return df, currency
 
-df = read_bloomberg('Bloomberg Data.xlsx')
+df, currency_list = read_bloomberg('Bloomberg Data.xlsx')
 
 ###### DATA INTAKE ########################
 # Initialise trade table
@@ -325,8 +328,10 @@ def init_tab_2():
                                 
                     html.Div([
                         html.Div(
-                                dcc.Input(id = 'product', type = 'text', className = "text_input", placeholder = 'Product'),
-                                style = {'margin-right': 60}),
+                                dcc.Dropdown(id='product',
+                                             options=[{'label': curr, 'value': curr}for curr in currency_list],
+                                             placeholder = 'Product'),
+                                style = {'width': 200, 'margin-right': 60}),
                         html.Div(
                                 dcc.Dropdown(id='direction',
                                              options=[{'label': 'Long', 'value': 'Long'},
