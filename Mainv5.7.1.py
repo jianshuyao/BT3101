@@ -597,14 +597,14 @@ app.layout = html.Div(
         dcc.Interval(
             id='interval-component',
             interval=20*1000, # every 20 seconds
-            n_intervals=50
+            n_intervals=5
         ),
         
         dcc.Store(id='bloomberg_store'),
         dcc.Interval(
             id='interval-bloomberg',
             interval=20*1000, # every 20 seconds
-            n_intervals=50
+            n_intervals=5
         )
     ]
 )
@@ -643,9 +643,13 @@ def update_bloomberg(n):
                Output('tab1_total_portfolio', 'children')],
               [Input('user_login', 'value'),
                Input('tab1_date_range', 'start_date'),
-               Input('tab1_date_range', 'end_date')])
-def update_tab1_pnl(user, start_date, end_date):
+               Input('tab1_date_range', 'end_date'),
+               Input('trade_table_store', 'data'),
+               Input('bloomberg_store', 'data')])
+def update_tab1_pnl(user, start_date, end_date, data_dict, bloomberg_dict):
+    #df = pd.DataFrame.from_dict(bloomberg_dict)
     df = read_bloomberg('Bloomberg Data.xlsx')
+    trade_table = pd.DataFrame.from_dict(data_dict)
     start_date = dt.strptime(start_date, "%Y-%m-%d").strftime('%d/%m/%Y')
     end_date = dt.strptime(end_date, "%Y-%m-%d").strftime('%d/%m/%Y')
     
