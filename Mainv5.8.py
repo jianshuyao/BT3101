@@ -23,9 +23,10 @@ def read_bloomberg(file_name):
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     df.set_index('Date', inplace=True)
     df = df.sort_index()
-    currency = list(data.columns)
+    currency = list(df.columns)
     currency = [name for name in currency if name[0:7] != "Unnamed"]
-    currency = [name[:name.find(' ')] for name in currency]
+    currency = [name for name in currency if name.lower() != 'date']
+    currency = [name if name.find(' ') == -1 else name[:name.find(' ') != -1] for name in currency]
     return df, currency
 
 df, currency_list = read_bloomberg('Bloomberg Data.xlsx')
