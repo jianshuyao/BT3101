@@ -611,18 +611,18 @@ app.layout = html.Div(
 
 
 ### read file by interval
-@app.callback(Output('bloomberg_store', 'data'),
+@app.callback(Output('trade_table_store', 'data'),
               [Input('interval-component', 'n_intervals')])
 def update_data_source(n): 
     trade_table, portfolio_list, user_list = load_data()
-    return df.to_dict('records')
+    return trade_table.to_dict('records')
 
 ### read file by interval
-@app.callback(Output('trade_table_store', 'data'),
+@app.callback(Output('bloomberg_store', 'data'),
               [Input('interval-bloomberg', 'n_intervals')])
-def update_data_source(n): 
+def update_bloomberg(n): 
     df = read_bloomberg('Bloomberg Data.xlsx')
-    return trade_table.to_dict('records')
+    return df.to_dict('records')
 
 ### date picker range
 #@app.callback([Output('tab1_date_range','start_date'),
