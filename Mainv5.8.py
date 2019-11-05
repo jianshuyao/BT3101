@@ -831,8 +831,8 @@ def update_tab3_daily(start, end, data_dict, user, portfolio):
                               & (trade_table['User'] == user)]
     trans_preprocessing(temp_df)
     
-    start = datetime.strptime(start, "%Y-%m-%d").strftime('%d/%m/%Y')
-    end = datetime.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
+    start = dt.strptime(start, "%Y-%m-%d").strftime('%d/%m/%Y')
+    end = dt.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
 
     pnl = pnl_portfolio(start, end, temp_df, portfolio, df)  
     pnl.reset_index(level=0, inplace=True)
@@ -862,8 +862,8 @@ def update_tab3_ratio_list(start, end, data_dict, user):
     temp_df = trade_table.loc[(trade_table['User'] == user)]
     trans_preprocessing(temp_df)
     
-    start = datetime.strptime(start, "%Y-%m-%d").strftime('%d/%m/%Y')
-    end = datetime.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
+    start = dt.strptime(start, "%Y-%m-%d").strftime('%d/%m/%Y')
+    end = dt.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
 
     pnl = pnl_trader(start, end, temp_df, df)  
 
@@ -899,8 +899,8 @@ def update_tab4_graphs(start,end,view,trade_table_store):
     sharpe_ratio = 4
     hit_ratio = 5
 
-    start = datetime.strptime(start, "%Y-%m-%d").strftime('%d/%m/%Y')
-    end = datetime.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
+    start = dt.strptime(start, "%Y-%m-%d").strftime('%d/%m/%Y')
+    end = dt.strptime(end, "%Y-%m-%d").strftime('%d/%m/%Y')
 
     trade_table = pd.DataFrame.from_dict(trade_table_store)
     temp_df = trade_table
