@@ -825,6 +825,7 @@ def update_table(data_dict, user, sort_by):
                Input('user_login', 'value'),
                Input('tab3 portfolio', 'value')])
 def update_tab3_daily(start, end, data_dict, user, portfolio):
+    df = read_bloomberg('Bloomberg Data.xlsx')
     trade_table = pd.DataFrame.from_dict(data_dict)
     temp_df = trade_table.loc[(trade_table['Portfolio']==portfolio) 
                               & (trade_table['User'] == user)]
@@ -891,6 +892,7 @@ def update_tab3_ratio_list(start, end, data_dict, user):
                Input('tab 4 switch view','value'),
                Input('trade_table_store', 'data')])
 def update_tab4_graphs(start,end,view,trade_table_store):
+    df = read_bloomberg('Bloomberg Data.xlsx')
     total_pnl = 0
     number_of_portfolios = 1
     last_week_trades = 2
