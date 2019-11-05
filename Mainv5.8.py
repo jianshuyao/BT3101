@@ -84,16 +84,16 @@ def get_last_3months():
 ## function for table
 # input: df
 # output: df
-def tab3_get_data(trade_table, user, start, end):
+def tab3_get_data(trade_table, user):
     ### filter to get user data
     trade_table['Size/Notional'] = trade_table['Size/Notional'].astype('int')
     trade_table = trade_table[trade_table.User==user]
     
     ### 
-    if start:
-        trade_table = trade_table[trade_table.Timestamp>=start]
-    if end:
-        trade_table = trade_table[trade_table.Timestamp<=end]
+    #if start:
+    #    trade_table = trade_table[trade_table.Timestamp>=start]
+    #if end:
+    #    trade_table = trade_table[trade_table.Timestamp<=end]
     
     #create an empty df to hold data
     groupby_product = pd.DataFrame(columns=['Portfolio','Size/Notional'])
@@ -115,7 +115,7 @@ def tab3_get_data(trade_table, user, start, end):
 # ouput: dash_table.DataTable
 def tab3_build_table(trade_table, user):
     #trade_table = pd.DataFrame.from_dict(trade_table_store)
-    data_df = tab3_get_data(trade_table, user, None, None)
+    data_df = tab3_get_data(trade_table, user)
     return dash_table.DataTable(
         id = 'tab3 product table',
         columns = [{"name": i, "id": i} for i in data_df.columns],
@@ -789,15 +789,13 @@ def update_portfolio(user, data_dict):
 ###tab3 table
 @app.callback(
     Output('tab3 product table', 'data'),
-    [Input('tab3_date_range', 'start_date'),
-     Input('tab3_date_range', 'end_date'),
-     Input('trade_table_store', 'data'),
+    [Input('trade_table_store', 'data'),
      Input('user_login', 'value'),
      Input('tab3 product table','sort_by')
     ])
-def update_table(start_date, end_date, data_dict, user, sort_by):
+def update_table(data_dict, user, sort_by):
     data = pd.DataFrame.from_dict(data_dict)
-    df = tab3_get_data(data, user, start_date, end_date)
+    df = tab3_get_data(data, user)
     
     if len(sort_by):
         trade_df = df.sort_values(
