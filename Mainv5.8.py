@@ -23,13 +23,18 @@ def read_bloomberg(file_name):
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     df.set_index('Date', inplace=True)
     df = df.sort_index()
+    return df
+
+df = read_bloomberg('Bloomberg Data.xlsx')
+
+def get_currency():
     currency = list(df.columns)
     currency = [name for name in currency if name[0:7] != "Unnamed"]
     currency = [name for name in currency if name.lower() != 'date']
     currency = [name if name.find(' ') == -1 else name[:name.find(' ') != -1] for name in currency]
-    return df, currency
+    return currency
 
-df, currency_list = read_bloomberg('Bloomberg Data.xlsx')
+currency_list = get_currency()
 
 ###### DATA INTAKE ########################
 # Initialise trade table
@@ -308,16 +313,16 @@ def init_tab_2():
                 html.Div([
                     html.Div([
                         html.Div(
-                                dcc.Input(id = 'user', className = "text_input", type = 'text', placeholder = 'User'),
+                                dcc.Input(id = 'user', className = "text_input", type = 'text', placeholder = 'User*'),
                                 style = {'margin-right': 60}),
                         html.Div(
-                                dcc.Input(id = 'portfolio', className = "text_input", type = 'text', placeholder = 'Portfolio'),
+                                dcc.Input(id = 'portfolio', className = "text_input", type = 'text', placeholder = 'Portfolio*'),
                                 style = {'margin-right': 60}),
                         html.Div(
                                 dcc.DatePickerSingle(
                                     id = 'timestamp',
                                     max_date_allowed = dt.now().date(),
-                                    placeholder = 'Date'),
+                                    placeholder = 'Date*'),
                                 style = {'width': 200, 'margin-right': 60}),
                         html.Div(
                                 dcc.Input(id = 'type', type = 'text', className = "text_input", placeholder = 'Type of Trade'),
@@ -331,19 +336,19 @@ def init_tab_2():
                         html.Div(
                                 dcc.Dropdown(id='product',
                                              options=[{'label': curr, 'value': curr}for curr in currency_list],
-                                             placeholder = 'Product'),
+                                             placeholder = 'Product*'),
                                 style = {'width': 200, 'margin-right': 60}),
                         html.Div(
                                 dcc.Dropdown(id='direction',
                                              options=[{'label': 'Long', 'value': 'Long'},
                                                       {'label': 'Short', 'value': 'Short'}],
-                                             placeholder = 'Direction'),
+                                             placeholder = 'Direction*'),
                                 style = {'width': 200, 'margin-right': 60}),
                         html.Div(
-                                dcc.Input(id = 'price', type = 'number',  className = "text_input", placeholder = 'Price'),
+                                dcc.Input(id = 'price', type = 'number',  className = "text_input", placeholder = 'Price*'),
                                 style = {'margin-right': 60}),
                         html.Div(
-                                dcc.Input(id = 'size', type = 'number',  className = "text_input", placeholder = 'Size/Notional'),
+                                dcc.Input(id = 'size', type = 'number',  className = "text_input", placeholder = 'Size/Notional*'),
                                 style = {'margin-right': 60}),
                     ], 
                     style = {'margin-top': 10, 'margin-bottom': 30,
@@ -388,7 +393,7 @@ def init_tab_2():
                 ],style = {'padding': 10, 'display': 'flex', 'flex-direction': 'row-reverse','width': '90%',}),
                                 
                 html.Div(
-                    dcc.ConfirmDialog(id = 'confirm', message = 'There are blank fields!')
+                    dcc.ConfirmDialog(id = 'confirm', message = 'Please fill in all * fields!')
                 ),
                 
                 html.Div(id = 'tab2_table',
@@ -722,7 +727,7 @@ def update_table(data_dict, user, sort_by):
 
 
 @app.callback(
-    [Output('confirm', 'displayed')],
+     Output('confirm', 'displayed'),
     [Input('add', 'submit_n_clicks')],
     [State('user_login', 'value'),
      State('trade_table_store', 'data'),
@@ -743,20 +748,21 @@ def add_trans(submit_n_clicks, login, data_dict, portfolio, product,
               risk, timeframe, strategy, timestamp, user):
     
     trade_table = pd.DataFrame.from_dict(data_dict)
-    user_list = sorted(trade_table.User.unique())
-    #trade_user = trade_table[trade_table.User == login]
-    
-    #if len(sort_by):
-    #    trade_df = trade_user.sort_values(
-    #        [col['column_id'] for col in sort_by],
-    #         ascending=[ col['direction'] == 'asc' for col in sort_by ],
-    #         inplace=False )
-    #else: trade_df = trade_user
+#    user_list = sorted(trade_table.User.unique())
+#    trade_user = trade_table[trade_table.User == login]
+#    
+#    if len(sort_by):
+#        trade_df = trade_user.sort_values(
+#            [col['column_id'] for col in sort_by],
+#             ascending=[ col['direction'] == 'asc' for col in sort_by ],
+#             inplace=False )
+#    else: trade_df = trade_user
         
     if submit_n_clicks:
-        inputs = [portfolio, type, product, direction, price, size, tenor, risk, timeframe, strategy, timestamp, user]
+        inputs_dict = [portfolio, product, direction, price, size, timestamp, user]
+        inputs = inputs_dict.keys()
         for input in inputs:
-            if input == None: 
+            if inputs[input] == None: 
                 return True
             
         index = len(trade_table)
@@ -773,10 +779,10 @@ def add_trans(submit_n_clicks, login, data_dict, portfolio, product,
         trade_table.loc[index, 'Timestamp'] = timestamp
         trade_table.loc[index, 'User'] = user
         trade_table[trade_table.User == user].to_csv(join(csv_path, user + '.csv'), index = False)
-        if (user not in user_list):
-            user_list.append(user)
-            user_list.sort()
-            options = [{'label': u, 'value': u}for u in user_list]
+#        if (user not in user_list):
+#            user_list.append(user)
+#            user_list.sort()
+#            options = [{'label': u, 'value': u}for u in user_list]
         return False
     return False
 
