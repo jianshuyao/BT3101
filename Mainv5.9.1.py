@@ -29,9 +29,9 @@ df = read_bloomberg('Bloomberg Data.xlsx')
 
 def get_currency():
     currency = list(df.columns)
-    currency = [name for name in currency if name[0:7] != "Unnamed"]
+    currency = [name for name in currency if 'Unnamed' not in name]
     currency = [name for name in currency if name.lower() != 'date']
-    currency = [name if name.find(' ') == -1 else name[:name.find(' ') != -1] for name in currency]
+    currency = [name if name.find(' ') == -1 else name[:name.find(' ')] for name in currency]
     return currency
 
 currency_list = get_currency()
