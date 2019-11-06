@@ -326,7 +326,9 @@ def init_tab_1():
                                             id = 'tab1_date_range',
                                             display_format='Y-M-D',
                                             end_date = dt.now().date(),
-                                            start_date = get_last_3months()
+                                            start_date = get_last_3months(),
+                                            max_date_allowed = dt.now().date(),
+                                            min_date_allowed = get_last_3months()
                                        )],
                                        className = 'row',
                                        style = {'display': 'flex', 'flex-direction': 'row',
@@ -415,7 +417,9 @@ def init_tab_3():
             id = 'tab3_date_range',
             display_format='Y-M-D',
             end_date = dt.now().date(),
-            start_date = get_last_3months()
+            start_date = get_last_3months(),
+            max_date_allowed = dt.now().date(),
+            min_date_allowed = get_last_3months()
         )],
         className = 'row',
         style = {'margin':'auto','margin-bottom': 30, 'width': '90%',
@@ -505,7 +509,9 @@ def init_tab_4():
                                 id = 'tab4_date_range',
                                 display_format='Y-M-D',
                                 end_date = dt.now().date(),
-                                start_date = get_last_3months()
+                                start_date = get_last_3months(),
+                                max_date_allowed = dt.now().date(),
+                                min_date_allowed = get_last_3months()
                            )],
                            style = {'margin':'auto', 'margin-bottom': 30, 'width': '90%',
                                    'display': 'flex', 'flex-direction': 'row', "margin-top": 30}
