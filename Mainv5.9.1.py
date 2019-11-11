@@ -618,7 +618,7 @@ app.layout = html.Div(
         dcc.Store(id='trade_table_store'),
         dcc.Interval(
             id='interval-component',
-            interval=20*1000, # every 20 seconds
+            interval=5*1000, # every 20 seconds
             n_intervals=5
         ),
         
