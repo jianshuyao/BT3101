@@ -476,11 +476,11 @@ def init_tab_4():
                     ),
 
                 html.Div(
-                    className = "twelve columns", 
+                    className = "six columns", 
                     children = [
                         dcc.Graph(id='tab4 graphs'),
                     ])  
-              ],
+              ], 
               style = {'margin-top': 10, 'margin-bottom': 30})
 
             ], style = {'margin-left': 30, 'margin-right': 30, 'margin-top': 20, 'margin-bottom': 30})
