@@ -38,9 +38,6 @@ def nearest_after(ls,base):
         return min(later)
     except ValueError:
         return None 
-    #closest_date = min(later)
-    #return closest_date
-
 
 
 #find the nearest date before a given date
@@ -70,10 +67,6 @@ def product_position_til(date,trader_df,portfolio,currency):
     return result
 
 def pnl_product(start,end,trader_df,portfolio,currency,df):
-    #start is the nearest date after the given starting date when there is a trade (dd/mm/yy)
-    # start will be taken as the starting point 
-    #all previous trade will be ignored
-
     
     #input example: '1/9/2019', '10/9/2019', A1_KWN, bloomberg_df
     #input dates are inclusive
@@ -185,10 +178,7 @@ def pnl_portfolio(start,end,trader_df,portfolio,df):
                 return None
     return result
         
-        
 
-
-# In[9]:
 
 def pnl_trader(start,end,trader_df,df):
     portfolios = trader_df['Portfolio'].unique()
@@ -226,7 +216,6 @@ def pnl_team(start,end,team_df,df):
 def total_pnl(start,end,team_df,df):
     pass
 
-# In[10]:
 
 from math import sqrt
 def cal_sharpe_ratio(pnl_df):
@@ -240,8 +229,6 @@ def cal_sharpe_ratio(pnl_df):
     return round(result,2)
 
 
-# In[11]:
-
 def cal_sortino_ratio(pnl_df):
     mu = pnl_df.PnL.mean()
     sd = pnl_df.loc[(pnl_df['PnL'] <= 0)].PnL.std()
@@ -252,8 +239,6 @@ def cal_sortino_ratio(pnl_df):
     return round(result,2)
                      
 
-
-# In[12]:
 
 def cal_hit_ratio(pnl_df):
     winning = pnl_df.loc[(pnl_df['PnL'] > 0)].shape[0]
