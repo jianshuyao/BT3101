@@ -112,11 +112,6 @@ def tab3_get_data(trade_table, user):
     trade_table['Size/Notional'] = trade_table['Size/Notional'].astype('int')
     trade_table = trade_table[trade_table.User==user]
     
-    ### 
-    #if start:
-    #    trade_table = trade_table[trade_table.Timestamp>=start]
-    #if end:
-    #    trade_table = trade_table[trade_table.Timestamp<=end]
     
     #create an empty df to hold data
     groupby_product = pd.DataFrame(columns=['Portfolio','Size/Notional'])
@@ -494,17 +489,6 @@ def init_tab_3():
         className="four columns",
         style = {'padding': 10})
     
-#    selector_section = html.Div([
-#        selector_date, selector_portfolio], 
-#        className = "four columns")
-    
-    
-#    pnl_header = html.Div(
-#        className = "row chart-top-bar",
-#        children = [
-#            html.Div(
-#                className="inline-block chart-title",
-#                children = "PnL Performance")])
                 
     pnl_header = html.Div(
                     className = "row chart-top-bar",
@@ -1004,6 +988,7 @@ def update_tab4_graphs(start,end,view,trade_table_store):
     hit_ratio = cal_hit_ratio(pnl_df)
     number_of_portfolios = len(temp_df.Portfolio.unique())
     total_pnl = round(pnl_df.PnL.sum(),2)
+    last_week_trades = temp_df.shape[0]
 
 
     if view == 'Individuals':

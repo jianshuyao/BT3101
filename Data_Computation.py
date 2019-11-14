@@ -3,15 +3,20 @@ import numpy as np
 from datetime import timedelta
 from datetime import datetime
 from fractions import Fraction
+from math import sqrt
 
 
 
-#bloomberg sample data for 5 currencies 
-#df = pd.read_excel('Bloomberg Data.xlsx')
-#df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-#df.set_index('Date', inplace=True)
-#df = df.sort_index()
+####################################
+####  1. HELPER FUNCTIONS  ####
+####################################
 
+# function to preprocess transaction data 
+# Purpose: 
+## 1. Take direction of the trade into consideration. Long: Postive; Short: Negative
+## 2. Transform Date string to Datetime object
+# input: transaction datafram of a trader
+# output: processed transaction dataframe
 def trans_preprocessing(trader_data):
     #handle direction and notional of trade 
     #Size is a new column with the direction of trade
@@ -66,9 +71,12 @@ def product_position_til(date,trader_df,portfolio,currency):
     
     return result
 
+# function to calculate PnL of a single product of a portforlio of a trader 
+# Inputs: Start and end date, preprocessed transaction dataframe, portfolio name (string), product name (String), bloomberg dataframe
+# Output: PnL Dataframe, Date as index
 def pnl_product(start,end,trader_df,portfolio,currency,df):
     
-    #input example: '1/9/2019', '10/9/2019', A1_KWN, bloomberg_df
+    #input example: '1/9/2019', '10/9/2019', 'A1', 'TWN', bloomberg_df
     #input dates are inclusive
     
     product = trader_df.groupby('Portfolio').get_group(portfolio).groupby('Product').get_group(currency)
@@ -163,6 +171,7 @@ def pnl_product(start,end,trader_df,portfolio,currency,df):
 
 
 
+# function calculate PnL of a portfolio 
 def pnl_portfolio(start,end,trader_df,portfolio,df):
     products = trader_df.groupby('Portfolio').get_group(portfolio)['Product'].unique()
     
@@ -179,7 +188,7 @@ def pnl_portfolio(start,end,trader_df,portfolio,df):
     return result
         
 
-
+# function calculate PnL of all portfolios of a trader 
 def pnl_trader(start,end,trader_df,df):
     portfolios = trader_df['Portfolio'].unique()
     
@@ -195,6 +204,7 @@ def pnl_trader(start,end,trader_df,df):
                 return None
     return result  
 
+# function calculate PnL of all portfolios of a team 
 def pnl_team(start,end,team_df,df):
     traders = team_df['User'].unique()
     
@@ -211,13 +221,9 @@ def pnl_team(start,end,team_df,df):
                 return None
         return result  
 
-               
-
-def total_pnl(start,end,team_df,df):
-    pass
 
 
-from math import sqrt
+# function calculate Sharpe Ratio
 def cal_sharpe_ratio(pnl_df):
     mu = pnl_df.PnL.mean()
     sd = pnl_df.PnL.std()
@@ -228,7 +234,7 @@ def cal_sharpe_ratio(pnl_df):
     
     return round(result,2)
 
-
+# function calculate Sortino Ratio
 def cal_sortino_ratio(pnl_df):
     mu = pnl_df.PnL.mean()
     sd = pnl_df.loc[(pnl_df['PnL'] <= 0)].PnL.std()
@@ -239,7 +245,7 @@ def cal_sortino_ratio(pnl_df):
     return round(result,2)
                      
 
-
+# function calculate Hit Ratio
 def cal_hit_ratio(pnl_df):
     winning = pnl_df.loc[(pnl_df['PnL'] > 0)].shape[0]
     total = pnl_df.shape[0]
