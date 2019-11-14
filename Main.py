@@ -49,6 +49,7 @@ def get_last_3months():
     return dt(last3month.year, last3month.month, 1).date()
 
 # Initialise trade table
+## helper function used by load_data() method to load user transaction records
 def read_data(user):
     file_names = [f for f in listdir(csv_path) if isfile(join(csv_path, f)) and f[-4:]=='.csv']
     
@@ -104,9 +105,9 @@ def tab2_build_table(trade_table, user):
 
 ######################## function for tab 3 ########################
 
-## function for table
-# input: df
-# output: df
+## function for table (helper function for tab3_build_table() method)
+# input: df (records all information of trades maded by all users), username
+# output: df (current positions grouped by product names for the specified trader)
 def tab3_get_data(trade_table, user):
     ### filter to get user data
     trade_table['Size/Notional'] = trade_table['Size/Notional'].astype('int')
@@ -129,8 +130,8 @@ def tab3_get_data(trade_table, user):
     groupby_product = groupby_product.sort_values(by=['Portfolio', 'Product'])
     return groupby_product
 
-# input: df
-# ouput: dash_table.DataTable
+# input: df, username (using tab3_get_data to get the table data and add formatting)
+# ouput: dash_table.DataTable 
 def tab3_build_table(trade_table, user):
     #trade_table = pd.DataFrame.from_dict(trade_table_store)
     data_df = tab3_get_data(trade_table, user)
@@ -297,6 +298,7 @@ def tab2_build_inputs():
 ######################## tab 3 components ########################
 
 ## function for building ratio containers
+# helper function used by tab3_build_ratio to do formatting for individual container
 def tab3_ratio_box(ratio_name):
     r_id = ratio_name.lower().replace(' ','_')
     return html.Div([
@@ -665,15 +667,8 @@ app.layout = html.Div(
         ]),
         
         dcc.Store(id='trade_table_store'),
-        dcc.Interval(
+        dcc.Interval(# scans the shared folder and reload all transaction data
             id='interval-component',
-            interval=5*1000, # every 20 seconds
-            n_intervals=5
-        ),
-        
-        dcc.Store(id='bloomberg_store'),
-        dcc.Interval(
-            id='interval-bloomberg',
             interval=20*1000, # every 20 seconds
             n_intervals=5
         )
@@ -686,19 +681,13 @@ app.layout = html.Div(
                                
 ######################## general ########################
 
-### read file by interval
+### read trader transactions by interval
 @app.callback(Output('trade_table_store', 'data'),
               [Input('interval-component', 'n_intervals')])
 def update_data_source(n): 
     trade_table, portfolio_list, user_list = load_data()
     return trade_table.to_dict('records')
 
-### read file by interval
-@app.callback(Output('bloomberg_store', 'data'),
-              [Input('interval-bloomberg', 'n_intervals')])
-def update_bloomberg(n): 
-    df = read_bloomberg('Bloomberg Data.xlsx')
-    return df.to_dict('records')
 
 ### update table user options according when new data comes in
 # input: trade table data store
@@ -862,6 +851,8 @@ def add_trans(submit_n_clicks, login, data_dict, portfolio, product,
 ######################## tab 3 ########################
 
 ###tab3 portfolio dropdown by user
+# input: selected trader name, trade data 
+# output: the list of portfolios found under this trader. Displayed in the tab3 dropdown to select portfolio
 @app.callback(Output('tab3 portfolio', 'options'),
               [Input('user_login', 'value'),
                Input('trade_table_store', 'data')])
@@ -872,6 +863,8 @@ def update_portfolio(user, data_dict):
     return [{'label': 'Portfolio '+i, 'value': i} for i in pfl_list]
 
 ###tab3 table
+# input: trade table, selected trader name, sort by which column of the table
+# output: the table in the tab3 displaying the current positions of all products
 @app.callback(
     Output('tab3 product table', 'data'),
     [Input('trade_table_store', 'data'),
@@ -892,6 +885,12 @@ def update_table(data_dict, user, sort_by):
     return trade_df.to_dict('records')
 
 ###tab3 update graph
+# input: selected start date in tab3 slider,
+#        selected end date in the tab3 slider,
+#        trade table,
+#        selected user name
+#        selected portfolio name
+# output: the calculated daily pnl for the selected user and portfolio for the selected dates
 @app.callback(Output('tab3 daily pnl', 'figure'),
               [Input('tab3_date_range', 'start_date'),
                Input('tab3_date_range', 'end_date'),
@@ -923,7 +922,9 @@ def update_tab3_daily(start, end, data_dict, user, portfolio):
             'data': [go.Scatter(x = X, y = Y, fill = 'tozeroy',)]
            }  
 
-###tab3 update graph
+###tab3 update ratios
+# input: start date, end date, trade table, user name
+# output: the computed ratios for the selected user
 @app.callback([Output('sharpe_ratio_text', 'children'),
                Output('hit_ratio_text', 'children'),
                Output('sortino_ratio_text', 'children')],
