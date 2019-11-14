@@ -183,7 +183,7 @@ def tab4_build_idv_graph(start, end,trade_table_store):
         }
     return fig
 
-## build individual view for PnL graph 
+## build team aggregated view for PnL graph 
 # input: start date, end date, df
 # output: figure
 def tab4_build_agg_graph(start, end, trade_table_store):
@@ -615,7 +615,7 @@ def init_tab_4():
                     id="info-container_tab4",
                     style = {'margin-top': 10, 'margin-bottom': 30, 'display': 'flex', 'justify-content': 'center'}),
             
-                
+                ### Team PnL performance graph 
                 html.Div([
                         html.Div(
                             className = "row chart-top-bar",
@@ -954,7 +954,14 @@ def update_tab3_ratio_list(start, end, data_dict, user):
 
 ######################## tab 4 ########################
 
-# tab 4 graphs
+# tab 4 team PnL graphs and ratio computation
+# inputs: selected start date in tab4 slider,
+#        selected end date in the tab4 slider,
+#        individual/aggregated switch view option in tab4,
+#        trade table
+# output: Team PnL graphs in tab4,
+#         the computed ratios for team performance for the selected date range
+
 @app.callback([Output('tab4 graphs', 'figure'),
                Output('total_pnl_text_tab4', 'children'),
                Output('no_of_porfolios_text_tab4', 'children'),
